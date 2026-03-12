@@ -72,7 +72,7 @@ if df is not None:
             
             with c2:
                 with st.container(border=True):
-                    st.write("🏪 **LOJA**")
+                    st.write("🏪 **LOJA DO CORAÇÃO**")
                     med = str(r.get('MEDALHA LOJA DO CORAÇÃO', '-'))
                     st.write(f"Medalha: **{med}**")
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
