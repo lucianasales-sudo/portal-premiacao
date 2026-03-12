@@ -17,7 +17,14 @@ def carregar():
     except:
         return None
 
-# Função para arredondar porcentagem
+# Função para garantir o R$ e limpar duplicatas
+def formatar_reais(valor):
+    if pd.isna(valor) or str(valor).strip() == '-':
+        return "R$ 0,00"
+    # Remove R, $, espaços e garante que o símbolo seja R$
+    limpo = str(valor).replace('R', '').replace('$', '').strip()
+    return f"R$ {limpo}"
+
 def formatar_pct(valor):
     try:
         num = float(str(valor).replace('%', '').replace(',', '.'))
@@ -52,7 +59,7 @@ if df is not None:
                     with st.container(border=True):
                         st.subheader("🎯 ADERÊNCIA")
                         st.metric("Performance", formatar_pct(info.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
-                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO ADERENCIA ROTEIRO', '0,00')}**")
+                        st.write(f"💰 **Prêmio: {formatar_reais(info.get('PREMIAÇÃO ADERENCIA ROTEIRO', '0,00'))}**")
                 
                 with c2:
                     with st.container(border=True):
@@ -60,17 +67,18 @@ if df is not None:
                         med = str(info.get('MEDALHA LOJA DO CORAÇÃO', '-'))
                         emo = "🥇" if "Ouro" in med else "🥈" if "Prata" in med else "🥉" if "Bronze" in med else "💎" if "Diamante" in med else "⚪"
                         st.metric("Medalha", f"{emo} {med}")
-                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO MEDALHA LC', '0,00')}**")
+                        st.write(f"💰 **Prêmio: {formatar_reais(info.get('PREMIAÇÃO MEDALHA LC', '0,00'))}**")
                 
                 with c3:
                     with st.container(border=True):
                         st.subheader("📈 SELL OUT")
                         st.metric("Atingimento", formatar_pct(info.get('AING SELLOUT %', 0)))
-                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO SELLOUT', '0,00')}**")
+                        st.write(f"💰 **Prêmio: {formatar_reais(info.get('PREMIAÇÃO SELLOUT', '0,00'))}**")
 
                 st.divider()
                 
-                total = info.get('TOTAL A RECEBER', '0,00')
-                st.success(f"### 🏆 VALOR TOTAL A RECEBER: R$ {total}")
+                # Valor Total com Cifrão Garantido
+                total_final = formatar_reais(info.get('TOTAL A RECEBER', '0,00'))
+                st.success(f"### 🏆 VALOR TOTAL A RECEBER: {total_final}")
             else:
                 st.error("Matrícula não encontrada.")
