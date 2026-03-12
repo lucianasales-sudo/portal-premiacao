@@ -17,11 +17,9 @@ def carregar():
     except:
         return None
 
-# Função para garantir o R$ e limpar duplicatas
 def formatar_reais(valor):
-    if pd.isna(valor) or str(valor).strip() == '-':
+    if pd.isna(valor) or str(valor).strip() in ['-', '', '0']:
         return "R$ 0,00"
-    # Remove R, $, espaços e garante que o símbolo seja R$
     limpo = str(valor).replace('R', '').replace('$', '').strip()
     return f"R$ {limpo}"
 
@@ -50,7 +48,8 @@ if df is not None:
                 col_n = [c for c in df.columns if 'NOME' in c][0]
                 st.header(f"Olá, {dados.iloc[0][col_n]}! 👋")
                 
-                mes_sel = st.selectbox("📅 Selecione o mês:", dados['MÊS'].unique())
+                meses = dados['MÊS'].unique()
+                mes_sel = st.selectbox("📅 Selecione o mês:", meses)
                 info = dados[dados['MÊS'] == mes_sel].iloc[0]
                 
                 c1, c2, c3 = st.columns(3)
@@ -75,21 +74,15 @@ if df is not None:
                         st.metric("Atingimento", formatar_pct(info.get('AING SELLOUT %', 0)))
                         st.write(f"💰 **Prêmio: {formatar_reais(info.get('PREMIAÇÃO SELLOUT', '0,00'))}**")
 
-               st.divider()
+                st.divider()
                 
-                # Valor Total
                 total_final = formatar_reais(info.get('TOTAL A RECEBER', '0,00'))
                 st.success(f"### 🏆 VALOR TOTAL A RECEBER: {total_final}")
 
-                # --- NOVA PARTE: OBSERVAÇÕES GERAIS ---
+                # PARTE DAS OBSERVAÇÕES
                 obs = info.get('OBSERVAÇÕES GERAIS', '')
-                
-                # Verifica se a observação existe e não é apenas um "0" ou vazio
                 if pd.notna(obs) and str(obs).strip() not in ['', '0', 'nan', 'NAN']:
                     st.markdown("### 📝 Observações Importantes:")
-                    with st.container(border=True):
-                        st.info(str(obs))
-                # ---------------------------------------
-
+                    st.info(str(obs))
             else:
                 st.error("Matrícula não encontrada.")
