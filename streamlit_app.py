@@ -1,63 +1,76 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuração da Página
 st.set_page_config(page_title="Portal de Premiação 3 Corações", layout="wide")
 
+# Título com ícone de café
 st.title("☕ Portal de Premiação")
-st.write("---")
+st.markdown("---")
 
-# 2. Carregamento dos Dados
 try:
-    # Lendo o arquivo CSV que você subiu
     df = pd.read_csv("dados.csv")
     df['MATRÍCULA'] = df['MATRÍCULA'].astype(str)
     
-    # 3. Interface de Acesso
+    # 1. ACESSO INICIAL
     acesso = st.text_input("Digite sua MATRÍCULA para acessar:", placeholder="Ex: 12345")
 
     if acesso:
-        # Lógica de ADMIN
         if acesso.upper() == "ADMIN":
-            st.subheader("📊 Painel Geral de Performance")
+            st.subheader("📊 Painel Geral (Visão Admin)")
             st.dataframe(df)
-        
-        # Lógica de PROMOTORA
         else:
-            resultado = df[df['MATRÍCULA'] == acesso]
+            # Filtra primeiro pela matrícula
+            dados_pessoais = df[df['MATRÍCULA'] == acesso]
             
-            if not resultado.empty:
-                info = resultado.iloc[0]
-                st.header(f"Olá, {info['NOME RH']}! 👋")
-                st.write(f"Competência: {info['MÊS']} / {info['ANO']}")
+            if not dados_pessoais.empty:
+                nome_promotora = dados_pessoais.iloc[0]['NOME RH']
+                st.header(f"Olá, {nome_promotora}! 👋")
+                
+                # 2. FILTRO DE MÊS
+                # Pega todos os meses disponíveis na planilha para essa pessoa
+                meses_disponiveis = dados_pessoais['MÊS'].unique()
+                mes_selecionado = st.selectbox("Selecione o Mês de Competência:", meses_disponiveis)
+                
+                # Filtra os dados finais pelo mês escolhido
+                info = dados_pessoais[dados_pessoais['MÊS'] == mes_selecionado].iloc[0]
+                
+                st.write(f"Exibindo resultados de: **{mes_selecionado} / {info['ANO']}**")
+                st.markdown("<br>", unsafe_allow_input_html=True)
 
-                # Usando colunas e métricas nativas (mais seguras contra erros)
-                col1, col2, col3 = st.columns(3)
+                # 3. CARDS DE PERFORMANCE (Versão Clean)
+                c1, c2, c3 = st.columns(3)
                 
-                with col1:
-                    st.info("**ADERÊNCIA**")
-                    st.metric("Performance", f"{info['PRODUTIVIDADE ADERENCIA ROTEIRO']}%")
-                    st.write(f"Prêmio: R$ {info['PREMIAÇÃO ADERENCIA ROTEIRO']}")
+                with c1:
+                    st.info("### ADERÊNCIA")
+                    # Usei .replace para garantir que não venha % duplicado se já estiver no CSV
+                    valor_ad = str(info['PRODUTIVIDADE ADERENCIA ROTEIRO']).replace('%', '')
+                    st.metric("Performance", f"{valor_ad}%")
+                    st.write(f"**Prêmio: R$ {info['PREMIAÇÃO ADERENCIA ROTEIRO']}**")
                 
-                with col2:
-                    st.success("**LOJA DO CORAÇÃO**")
+                with c2:
+                    st.success("### LOJA DO CORAÇÃO")
                     st.metric("Medalha", str(info['MEDALHA LOJA DO CORAÇÃO']))
-                    st.write(f"Prêmio: R$ {info['PREMIAÇÃO MEDALHA LC']}")
+                    st.write(f"**Prêmio: R$ {info['PREMIAÇÃO MEDALHA LC']}**")
                 
-                with col3:
-                    st.warning("**SELL OUT**")
-                    st.metric("Atingimento", f"{info['AING SELLOUT %']}%")
-                    st.write(f"Prêmio: R$ {info['PREMIAÇÃO SELLOUT']}")
+                with c3:
+                    st.warning("### SELL OUT")
+                    valor_so = str(info['AING SELLOUT %']).replace('%', '')
+                    st.metric("Atingimento", f"{valor_so}%")
+                    st.write(f"**Prêmio: R$ {info['PREMIAÇÃO SELLOUT']}**")
 
-                st.write("---")
-                # Destaque do valor total
-                st.subheader(f"💰 TOTAL A RECEBER: R$ {info['TOTAL A RECEBER']}")
+                st.markdown("<br>", unsafe_allow_input_html=True)
+                
+                # 4. DESTAQUE TOTAL
+                st.markdown(f"""
+                <div style="background-color: #FFD700; padding: 25px; border-radius: 15px; text-align: center;">
+                    <h2 style="color: #333; margin: 0;">💰 TOTAL A RECEBER: R$ {info['TOTAL A RECEBER']}</h2>
+                </div>
+                """, unsafe_allow_input_html=True)
                 
                 if str(info['OBSERVAÇÕES GERAIS']) != 'nan':
-                    st.markdown(f"*Obs: {info['OBSERVAÇÕES GERAIS']}*")
+                    st.info(f"**Nota:** {info['OBSERVAÇÕES GERAIS']}")
             else:
-                st.error("Matrícula não localizada no arquivo dados.csv")
+                st.error("Matrícula não localizada.")
 
 except Exception as e:
-    st.error("Erro técnico ao ler a base de dados.")
-    st.info("Certifique-se de que o arquivo 'dados.csv' está na mesma pasta do código no GitHub.")
+    st.error("Erro ao carregar dados. Verifique o arquivo dados.csv")
