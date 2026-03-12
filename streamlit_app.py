@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configurações de Design
 st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
 
-# Funções de Formatação Seguras
+# Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','nan']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -21,52 +21,47 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return "0%"
 
-# 2. Carregamento de Dados
+# 2. Carregamento
 @st.cache_data
 def load():
     try:
-        try:
-            df_local = pd.read_csv("dados.csv", encoding='utf-8')
-        except:
-            df_local = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
-        df_local.columns = [c.strip().upper() for c in df_local.columns]
-        return df_local
-    except:
-        return None
+        try: df = pd.read_csv("dados.csv", encoding='utf-8')
+        except: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        df.columns = [c.strip().upper() for c in df.columns]
+        return df
+    except: return None
 
 df = load()
 
 if df is not None:
-    # Cabeçalho Nativo
-    st.title("🏆 Portal de Premiação")
+    # --- TÍTULO OTIMIZADO (Fonte menor para não quebrar no celular) ---
+    st.markdown("<h2 style='text-align:center; margin-bottom:0;'>🏆 Portal de Premiação</h2>", unsafe_allow_input_html=True)
     st.divider()
 
     c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[c_mat] = df[c_mat].astype(str).str.strip()
     
-    # Login e Filtro Centralizados
-    _, c_log, _ = st.columns([1.5, 1, 1.5])
-    with c_log:
-        acesso = st.text_input("MATRÍCULA:", placeholder="Digite aqui...")
+    # Login e Filtro (Em colunas que se ajustam)
+    col_l, col_m = st.columns(2)
+    with col_l:
+        acesso = st.text_input("MATRÍCULA:", placeholder="Ex: 1-49174")
     
     if acesso:
         u_df = df[df[c_mat] == acesso.strip()]
         if not u_df.empty:
-            # Saudação
+            # Saudação Curta
             nome_col = [c for c in df.columns if 'NOME' in c][0]
-            st.subheader(f"Olá, {u_df.iloc[0][nome_col]}! 👋")
+            primeiro_nome = u_df.iloc[0][nome_col].split()[0]
+            st.write(f"### Olá, {primeiro_nome}! 👋")
             
-            # Seletor de Mês
-            _, c_m, _ = st.columns([1.5, 1, 1.5])
-            with c_m:
+            with col_m:
                 u_df['MÊS'] = u_df['MÊS'].astype(str).str.upper()
-                m_sel = st.selectbox("MÊS DE REFERÊNCIA:", u_df['MÊS'].unique())
+                m_sel = st.selectbox("MÊS:", u_df['MÊS'].unique())
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # --- ÁREA DE INDICADORES (Design Limpo) ---
-            st.write("### 📊 Seus Indicadores")
-            
+            # --- INDICADORES ---
+            st.write("### 📊 Indicadores")
             c1, c2, c3 = st.columns(3)
             
             with c1:
@@ -77,7 +72,7 @@ if df is not None:
             
             with c2:
                 with st.container(border=True):
-                    st.write("**🏪 LOJA DO CORAÇÃO**")
+                    st.write("**🏪 LOJA**")
                     st.metric("Medalha", str(r.get('MEDALHA LOJA DO CORAÇÃO', '-')))
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
             
@@ -86,21 +81,21 @@ if df is not None:
                     st.write("**📈 SELLOUT**")
                     meta_v = f_nm(r.get('META SELLOUT', 0))
                     real_v = f_nm(r.get('REAL SELLOUT', 0))
-                    st.caption(f"Meta: {meta_v} | Real: {real_v}")
+                    st.write(f"M: {meta_v} | R: {real_v}")
                     st.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
 
-            # --- TOTALIZADOR ---
+            # --- TOTALIZADOR MOBILE-READY (Fonte ajustada para caber em uma linha) ---
             st.divider()
             total_final = f_rs(r.get('TOTAL A RECEBER', 0))
             
-            # Mantive apenas o troféu para destacar a conquista
-            st.success(f"## 🏆 TOTAL A RECEBER: {total_final}")
+            # Usando st.info ou success com texto menor para garantir linha única
+            st.success(f"🏆 TOTAL: {total_final}")
             
             # Observações
             obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
             if obs not in ['nan', '0', '', 'None']:
-                with st.expander("📝 Notas e Observações Gerais", expanded=True):
+                with st.expander("📝 Notas", expanded=False):
                     st.write(obs)
         else:
             st.error("Matrícula não encontrada.")
