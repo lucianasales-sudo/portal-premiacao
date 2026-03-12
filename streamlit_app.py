@@ -75,10 +75,21 @@ if df is not None:
                         st.metric("Atingimento", formatar_pct(info.get('AING SELLOUT %', 0)))
                         st.write(f"💰 **Prêmio: {formatar_reais(info.get('PREMIAÇÃO SELLOUT', '0,00'))}**")
 
-                st.divider()
+               st.divider()
                 
-                # Valor Total com Cifrão Garantido
+                # Valor Total
                 total_final = formatar_reais(info.get('TOTAL A RECEBER', '0,00'))
                 st.success(f"### 🏆 VALOR TOTAL A RECEBER: {total_final}")
+
+                # --- NOVA PARTE: OBSERVAÇÕES GERAIS ---
+                obs = info.get('OBSERVAÇÕES GERAIS', '')
+                
+                # Verifica se a observação existe e não é apenas um "0" ou vazio
+                if pd.notna(obs) and str(obs).strip() not in ['', '0', 'nan', 'NAN']:
+                    st.markdown("### 📝 Observações Importantes:")
+                    with st.container(border=True):
+                        st.info(str(obs))
+                # ---------------------------------------
+
             else:
                 st.error("Matrícula não encontrada.")
