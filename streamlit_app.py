@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configurações da Página
 st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
 
-# Funções de Limpeza e Formatação
+# Funções de Formatação simplificadas para evitar erros de tipo
 def f_reais(v):
     if pd.isna(v) or str(v).strip() in ['-', '', '0', '0,00', 'nan']: return "R$ 0,00"
     v_limpo = str(v).replace('R', '').replace('$', '').replace('S', '').strip()
@@ -14,10 +14,7 @@ def f_pct(v):
     try:
         num = float(str(v).replace('%', '').replace(',', '.'))
         return f"{int(num)}%"
-    except: return str(v).strip() if pd.notna(v) else "0%"
-
-def f_txt(v):
-    return str(v).strip() if pd.notna(v) and str(v).strip() not in ['nan', '0', '-'] else "-"
+    except: return "0%"
 
 # 2. Carregamento de Dados
 @st.cache_data
@@ -30,52 +27,64 @@ def carregar():
     except: return None
 
 df = carregar()
-if df is None:
-    st.error("Arquivo dados.csv não encontrado.")
-    st.stop()
 
-# Ajuste de Matrícula
-c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-df[c_mat] = df[c_mat].astype(str).str.strip()
+if df is not None:
+    # Título Nativo (Sem HTML para evitar o TypeError)
+    st.title("🏆 Portal de Premiação")
+    st.divider()
 
-# --- PÁGINA 1: LOGIN CENTRALIZADO ---
-st.write("#")
-st.write("#")
-_, col_c, _ = st.columns([1, 2, 1])
+    c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
+    df[c_mat] = df[c_mat].astype(str).str.strip()
 
-with col_c:
-    st.markdown('<h1 style="text-align:center;background:#333;color:white;padding:20px;border-radius:10px;">🏆 Portal de Premiação</h1>', unsafe_allow_input_html=True)
-    st.write("")
-    with st.container(border=True):
-        st.subheader("🔑 Acesso Restrito")
-        acesso = st.text_input("👤 MATRÍCULA:", placeholder="Ex: 1-46532")
-    if not acesso: st.info("💡 Digite sua matrícula e pressione Enter.")
-
-# --- PÁGINA 2: RESULTADOS ---
-if acesso:
-    acesso = acesso.strip()
-    if acesso.upper() == "ADMIN":
-        st.divider()
-        st.dataframe(df, use_container_width=True)
-    else:
+    # Login Centralizado usando colunas nativas
+    _, col_c, _ = st.columns([1, 2, 1])
+    with col_c:
+        with st.container(border=True):
+            st.subheader("🔑 Acesso Restrito")
+            acesso = st.text_input("👤 MATRÍCULA:", placeholder="Ex: 1-46532")
+    
+    if acesso:
+        acesso = acesso.strip()
         user_df = df[df[c_mat] == acesso]
+        
         if user_df.empty:
-            st.error(f"Matrícula {acesso} não encontrada.")
+            st.error("Matrícula não encontrada.")
         else:
             c_nome = [c for c in df.columns if 'NOME' in c][0]
-            st.divider()
             st.header(f"Olá, {user_df.iloc[0][c_nome]}! 👋")
             
             user_df['MÊS'] = user_df['MÊS'].astype(str).str.strip().str.upper()
-            _, col_m, _ = st.columns([1, 1, 1])
-            with col_m:
-                m_sel = st.selectbox("📅 Selecione o mês:", user_df['MÊS'].unique())
+            mes_sel = st.selectbox("📅 Selecione o mês:", user_df['MÊS'].unique())
             
-            row = user_df[user_df['MÊS'] == m_sel].iloc[0]
+            row = user_df[user_df['MÊS'] == mes_sel].iloc[0]
+            
+            # --- CARDS ---
             st.markdown("### 📊 Seus Indicadores")
-            
             c1, c2, c3 = st.columns(3)
+            
             with c1:
                 with st.container(border=True):
-                    st.write("🎯 **ADERÊNCIA**")
+                    st.subheader("🎯 ADERÊNCIA")
                     st.metric("Performance", f_pct(row.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
+                    st.write(f"💰 Prêmio: **{f_reais(row.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
+            
+            with c2:
+                with st.container(border=True):
+                    st.subheader("🏪 LOJA DO CORAÇÃO")
+                    med = str(row.get('MEDALHA LOJA DO CORAÇÃO', '-'))
+                    st.metric("Medalha", med)
+                    st.write(f"💰 Prêmio: **{f_reais(row.get('PREMIAÇÃO MEDALHA LC', 0))}**")
+            
+            with c3:
+                with st.container(border=True):
+                    st.subheader("📈 SELLOUT")
+                    st.metric("Atingimento", f_pct(row.get('AING SELLOUT %', 0)))
+                    st.write(f"💰 Prêmio: **{f_reais(row.get('PREMIAÇÃO SELLOUT', 0))}**")
+
+            st.divider()
+            
+            # Totalizador usando st.success (Seguro e Nativo)
+            total = f_reais(row.get('TOTAL A RECEBER', '0,00'))
+            st.success(f"## 🏆 VALOR TOTAL A RECEBER: {total}")
+else:
+    st.error("Erro ao carregar o arquivo dados.csv")
