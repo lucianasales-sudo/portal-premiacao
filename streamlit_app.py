@@ -11,9 +11,15 @@ def f_reais(v):
     return f"R$ {v_limpo}"
 
 def f_numero(v):
-    # Retorna apenas o número, removendo qualquer R$ ou símbolo
-    if pd.isna(v) or str(v).strip() in ['-', '', 'nan']: return "0"
-    return str(v).replace('R', '').replace('$', '').replace('S', '').strip()
+    # Retorna apenas o número puro para Meta e Real
+    if pd.isna(v) or str(v).strip() in ['-', '', 'nan', '0']: return "0"
+    v_limpo = str(v).replace('R', '').replace('$', '').replace('S', '').replace('.', '').replace(',', '.').strip()
+    try:
+        # Tenta formatar com separador de milhar para ficar bonito
+        num = float(v_limpo)
+        return f"{num:,.0f}".replace(',', '.')
+    except:
+        return str(v).replace('R', '').replace('$', '').strip()
 
 def f_pct(v):
     try:
@@ -21,26 +27,32 @@ def f_pct(v):
         return f"{int(num)}%"
     except: return "0%"
 
-# 2. Carregamento
+# 2. Carregamento de Dados
 @st.cache_data
 def carregar():
     try:
-        try: df = pd.read_csv("dados.csv", encoding='utf-8')
-        except: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
-        df.columns = [c.strip().upper() for c in df.columns]
-        return df
-    except: return None
+        try:
+            df_local = pd.read_csv("dados.csv", encoding='utf-8')
+        except:
+            df_local = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        df_local.columns = [c.strip().upper() for c in df_local.columns]
+        return df_local
+    except:
+        return None
 
+# Executa o carregamento
 df = carregar()
 
+# --- INÍCIO DA LÓGICA DO APP ---
 if df is not None:
     st.title("🏆 Portal de Premiação")
     st.divider()
 
-    c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-    df[c_mat] = df[c_mat].astype(str).str.strip()
+    # DEFINIÇÃO DA VARIÁVEL (Para evitar NameError)
+    col_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
+    df[col_mat] = df[col_mat].astype(str).str.strip()
 
-    # Login
+    # Login Centralizado
     _, col_c, _ = st.columns([1, 2, 1])
     with col_c:
         with st.container(border=True):
@@ -56,7 +68,13 @@ if df is not None:
             st.header(f"Olá, {user_df.iloc[0][col_n]}! 👋")
             
             user_df['MÊS'] = user_df['MÊS'].astype(str).str.strip().str.upper()
-            mes_sel = st.selectbox("📅 Selecione o mês:", user_df['MÊS'].unique())
+            meses_disp = user_df['MÊS'].unique()
+            
+            # Seletor de Mês
+            _, col_m, _ = st.columns([1, 1, 1])
+            with col_m:
+                mes_sel = st.selectbox("📅 Selecione o mês:", meses_disp)
+            
             row = user_df[user_df['MÊS'] == mes_sel].iloc[0]
             
             st.markdown("### 📊 Seus Indicadores")
@@ -78,17 +96,18 @@ if df is not None:
             with c3:
                 with st.container(border=True):
                     st.subheader("📈 SELLOUT")
-                    
-                    # Colunas internas para Meta e Real SEM R$
-                    col_meta, col_real = st.columns(2)
-                    col_meta.metric("🎯 Meta", f_numero(row.get('META SELLOUT', 0)))
-                    col_real.metric("📈 Real", f_numero(row.get('REAL SELLOUT', 0)))
+                    # Meta e Real SEM R$
+                    cm, cr = st.columns(2)
+                    cm.metric("🎯 Meta", f_numero(row.get('META SELLOUT', 0)))
+                    cr.metric("📈 Real", f_numero(row.get('REAL SELLOUT', 0)))
                     
                     st.metric("📊 Atingimento", f_pct(row.get('AING SELLOUT %', 0)))
-                    
-                    # PRÊMIO CONTINUA COM R$
                     st.write(f"💰 Prêmio: **{f_reais(row.get('PREMIAÇÃO SELLOUT', 0))}**")
 
             st.divider()
             total = f_reais(row.get('TOTAL A RECEBER', '0,00'))
-            st.success(f"### 🏆 VALOR TOTAL A RECEBER: {total}")
+            st.success(f"## 🏆 VALOR TOTAL A RECEBER: {total}")
+        else:
+            st.error("Matrícula não encontrada.")
+else:
+    st.error("Arquivo dados.csv não carregado corretamente.")
