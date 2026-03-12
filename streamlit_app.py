@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configurações de Design
 st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
 
-# Funções de Formatação Seguras
+# Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','nan']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -48,7 +48,6 @@ if df is not None:
     if acesso:
         u_df = df[df[c_mat] == acesso.strip()]
         if not u_df.empty:
-            # Saudação Curta
             nome_completo = u_df.iloc[0][[c for c in df.columns if 'NOME' in c][0]]
             p_nome = str(nome_completo).split()[0]
             st.subheader(f"Olá, {p_nome}! 👋")
@@ -59,30 +58,36 @@ if df is not None:
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # --- ÁREA DE INDICADORES (Sem ícone ao lado do título) ---
-            st.write("### Indicadores") # Ícone removido aqui
+            st.write("### Indicadores")
             
+            # --- ÁREA DE CARDS HARMONIZADOS ---
             c1, c2, c3 = st.columns(3)
             
             with c1:
                 with st.container(border=True):
-                    st.write("**🎯 ADERÊNCIA**")
-                    st.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
+                    st.write("🎯 **ADERÊNCIA**")
+                    # Em vez de st.metric, usamos markdown para controle de tamanho
+                    st.write(f"Performance: **{f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
             
             with c2:
                 with st.container(border=True):
-                    st.write("**🏪 LOJA**")
-                    st.metric("Medalha", str(r.get('MEDALHA LOJA DO CORAÇÃO', '-')))
+                    st.write("🏪 **LOJA**")
+                    med = str(r.get('MEDALHA LOJA DO CORAÇÃO', '-'))
+                    st.write(f"Medalha: **{med}**")
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
             
             with c3:
                 with st.container(border=True):
-                    st.write("**📈 SELLOUT**")
-                    # Meta e Real por extenso e um abaixo do outro para mobile
-                    st.write(f"Meta: **{f_nm(r.get('META SELLOUT', 0))}**")
-                    st.write(f"Real: **{f_nm(r.get('REAL SELLOUT', 0))}**")
-                    st.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
+                    st.write("📈 **SELLOUT**")
+                    meta = f_nm(r.get('META SELLOUT', 0))
+                    real = f_nm(r.get('REAL SELLOUT', 0))
+                    ating = f_pc(r.get('AING SELLOUT %', 0))
+                    
+                    st.write(f"Meta: **{meta}**")
+                    st.write(f"Real: **{real}**")
+                    # Atingimento agora com tamanho equilibrado
+                    st.write(f"Atingimento: **{ating}**")
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
 
             # --- TOTALIZADOR ---
@@ -90,7 +95,7 @@ if df is not None:
             total_final = f_rs(r.get('TOTAL A RECEBER', 0))
             st.success(f"🏆 TOTAL: {total_final}")
             
-            # Observações
+            # Notas
             obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
             if obs not in ['nan', '0', '', 'None']:
                 with st.expander("📝 Notas", expanded=False):
