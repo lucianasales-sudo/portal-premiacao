@@ -72,10 +72,19 @@ if df is not None:
                     st.metric("Atingimento", f"{val_so}%")
                     st.write(f"Prêmio: R$ {info.get('PREMIAÇÃO SELLOUT', 0)}")
 
-                st.markdown(f"""
-                <div style="background-color: #FFD700; padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px;">
-                    <h2 style="color: #333; margin: 0;">💰 TOTAL A RECEBER: R$ {info.get('TOTAL A RECEBER', 0)}</h2>
-                </div>
-                """, unsafe_allow_input_html=True)
+                st.write("---")
+                # Destaque do Total usando comandos simples e seguros
+                total_valor = info.get('TOTAL A RECEBER', 0)
+                
+                st.subheader(f"💰 TOTAL A RECEBER: R$ {total_valor}")
+                
+                # Se quiser manter o fundo amarelo, usamos este comando em linha única:
+                estilo_total = f'<div style="background-color:#FFD700; padding:20px; border-radius:10px; text-align:center;"><h2 style="color:#333; margin:0;">💰 TOTAL A RECEBER: R$ {total_valor}</h2></div>'
+                st.markdown(estilo_total, unsafe_allow_input_html=True)
+                
+                # Observações
+                obs = info.get('OBSERVAÇÕES GERAIS', '')
+                if pd.notna(obs) and obs != '':
+                    st.info(f"**Nota:** {obs}")
             else:
                 st.error(f"Matrícula '{acesso}' não encontrada.")
