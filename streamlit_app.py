@@ -37,17 +37,17 @@ def load():
 df = load()
 
 if df is not None:
-    # Cabeçalho Nativo (Seguro contra TypeError)
+    # Cabeçalho Nativo
     st.title("🏆 Portal de Premiação")
     st.divider()
 
     c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[c_mat] = df[c_mat].astype(str).str.strip()
     
-    # Login e Filtro (Centralização por colunas nativas)
+    # Login e Filtro Centralizados
     _, c_log, _ = st.columns([1.5, 1, 1.5])
     with c_log:
-        acesso = st.text_input("MATRÍCULA:", placeholder="Ex: 1-49174")
+        acesso = st.text_input("MATRÍCULA:", placeholder="Digite aqui...")
     
     if acesso:
         u_df = df[df[c_mat] == acesso.strip()]
@@ -64,42 +64,40 @@ if df is not None:
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # --- ÁREA DE INDICADORES (Design Harmônico Nativo) ---
+            # --- ÁREA DE INDICADORES (Design Limpo) ---
             st.write("### 📊 Seus Indicadores")
             
-            # Criamos os cards usando containers com borda (Nativos e estáveis)
             c1, c2, c3 = st.columns(3)
             
             with c1:
                 with st.container(border=True):
-                    st.write("🎯 **ADERÊNCIA**")
+                    st.write("**🎯 ADERÊNCIA**")
                     st.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
-                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
+                    st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
             
             with c2:
                 with st.container(border=True):
-                    st.write("🏪 **LOJA DO CORAÇÃO**")
+                    st.write("**🏪 LOJA DO CORAÇÃO**")
                     st.metric("Medalha", str(r.get('MEDALHA LOJA DO CORAÇÃO', '-')))
-                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
+                    st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
             
             with c3:
                 with st.container(border=True):
-                    st.write("📈 **SELLOUT**")
-                    # Meta e Real em texto simples para segurança
+                    st.write("**📈 SELLOUT**")
                     meta_v = f_nm(r.get('META SELLOUT', 0))
                     real_v = f_nm(r.get('REAL SELLOUT', 0))
                     st.caption(f"Meta: {meta_v} | Real: {real_v}")
                     st.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
-                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
+                    st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
 
-            # --- TOTALIZADOR (Versão Blindada) ---
+            # --- TOTALIZADOR ---
             st.divider()
             total_final = f_rs(r.get('TOTAL A RECEBER', 0))
             
-            # Usando st.success que é um componente nativo com fundo verde e ícone
+            # Mantive apenas o troféu para destacar a conquista
             st.success(f"## 🏆 TOTAL A RECEBER: {total_final}")
             
-            # Notas e Observações
+            # Observações
             obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
             if obs not in ['nan', '0', '', 'None']:
                 with st.expander("📝 Notas e Observações Gerais", expanded=True):
