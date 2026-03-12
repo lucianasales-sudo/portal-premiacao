@@ -10,6 +10,11 @@ def f_reais(v):
     v_limpo = str(v).replace('R', '').replace('$', '').replace('S', '').strip()
     return f"R$ {v_limpo}"
 
+def f_numero(v):
+    # Retorna apenas o número, removendo qualquer R$ ou símbolo
+    if pd.isna(v) or str(v).strip() in ['-', '', 'nan']: return "0"
+    return str(v).replace('R', '').replace('$', '').replace('S', '').strip()
+
 def f_pct(v):
     try:
         num = float(str(v).replace('%', '').replace(',', '.'))
@@ -44,11 +49,9 @@ if df is not None:
     
     if acesso:
         acesso = acesso.strip()
-        user_df = df[df[c_mat] == acesso]
+        user_df = df[df[col_mat] == acesso]
         
-        if user_df.empty:
-            st.error("Matrícula não encontrada.")
-        else:
+        if not user_df.empty:
             col_n = [c for c in df.columns if 'NOME' in c][0]
             st.header(f"Olá, {user_df.iloc[0][col_n]}! 👋")
             
@@ -76,17 +79,16 @@ if df is not None:
                 with st.container(border=True):
                     st.subheader("📈 SELLOUT")
                     
-                    # Criando sub-colunas para Meta e Real ficarem lado a lado
+                    # Colunas internas para Meta e Real SEM R$
                     col_meta, col_real = st.columns(2)
-                    col_meta.metric("🎯 Meta", f_reais(row.get('META SELLOUT', 0)))
-                    col_real.metric("📈 Real", f_reais(row.get('REAL SELLOUT', 0)))
+                    col_meta.metric("🎯 Meta", f_numero(row.get('META SELLOUT', 0)))
+                    col_real.metric("📈 Real", f_numero(row.get('REAL SELLOUT', 0)))
                     
-                    # Atingimento logo abaixo
                     st.metric("📊 Atingimento", f_pct(row.get('AING SELLOUT %', 0)))
                     
-                    # Prêmio em destaque no final do card
+                    # PRÊMIO CONTINUA COM R$
                     st.write(f"💰 Prêmio: **{f_reais(row.get('PREMIAÇÃO SELLOUT', 0))}**")
 
             st.divider()
             total = f_reais(row.get('TOTAL A RECEBER', '0,00'))
-            st.success(f"## 🏆 VALOR TOTAL A RECEBER: {total}")
+            st.success(f"### 🏆 VALOR TOTAL A RECEBER: {total}")
