@@ -4,10 +4,8 @@ import pandas as pd
 # 1. Configuração da Página
 st.set_page_config(page_title="Portal 3 Corações", layout="wide")
 
-# Título com estilo nativo
 st.title("☕ Portal de Premiação")
-st.write("Acompanhe aqui seus resultados e metas.")
-st.divider()
+st.markdown("---")
 
 def carregar():
     try:
@@ -26,7 +24,6 @@ if df is not None:
     col_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[col_mat] = df[col_mat].astype(str).str.strip()
     
-    # Campo de busca
     acesso = st.text_input("👤 Digite sua MATRÍCULA:", placeholder="Ex: 1-37507")
 
     if acesso:
@@ -45,38 +42,45 @@ if df is not None:
                 
                 st.write(f"Resultados de **{mes_sel}**")
                 
-                # CARDS NATIVOS (Estes não dão erro!)
                 c1, c2, c3 = st.columns(3)
                 
                 with c1:
-                    # O container cria uma bordinha discreta e elegante
                     with st.container(border=True):
-                        st.subheader("ADERÊNCIA")
+                        st.subheader("🎯 ADERÊNCIA")
                         val_ad = str(info.get('PRODUTIVIDADE ADERENCIA ROTEIRO', '0')).replace('%', '')
                         st.metric("Performance", f"{val_ad}%")
-                        st.write(f"💰 Prêmio: R$ {info.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0)}")
+                        # Colocando o R$ e emoji de dinheiro
+                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0)}**")
                 
                 with c2:
                     with st.container(border=True):
-                        st.subheader("LOJA DO CORAÇÃO")
-                        st.metric("Medalha", str(info.get('MEDALHA LOJA DO CORAÇÃO', '-')))
-                        st.write(f"💰 Prêmio: R$ {info.get('PREMIAÇÃO MEDALHA LC', 0)}")
+                        st.subheader("🏅 LOJA DO CORAÇÃO")
+                        medalha = str(info.get('MEDALHA LOJA DO CORAÇÃO', '-'))
+                        
+                        # Lógica para escolher o emoji da medalha
+                        emoji_m = "🎖️"
+                        if "Ouro" in medalha: emoji_m = "🥇"
+                        elif "Prata" in medalha: emoji_m = "🥈"
+                        elif "Bronze" in medalha: emoji_m = "🥉"
+                        elif "Diamante" in medalha: emoji_m = "💎"
+                        
+                        st.metric("Medalha", f"{emoji_m} {medalha}")
+                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO MEDALHA LC', 0)}**")
                 
                 with c3:
                     with st.container(border=True):
-                        st.subheader("SELL OUT")
+                        st.subheader("📈 SELL OUT")
                         val_so = str(info.get('AING SELLOUT %', '0')).replace('%', '')
                         st.metric("Atingimento", f"{val_so}%")
-                        st.write(f"💰 Prêmio: R$ {info.get('PREMIAÇÃO SELLOUT', 0)}")
+                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO SELLOUT', 0)}**")
 
                 st.divider()
                 
-                # TOTAL EM DESTAQUE (Usando o info do Streamlit que é colorido)
                 total = info.get('TOTAL A RECEBER', 0)
                 st.success(f"### 🏆 VALOR TOTAL A RECEBER: R$ {total}")
                 
                 obs = info.get('OBSERVAÇÕES GERAIS', '')
                 if pd.notna(obs) and obs != '' and obs != '0':
-                    st.warning(f"💡 **Nota:** {obs}")
+                    st.info(f"💡 **Nota:** {obs}")
             else:
-                st.error("Matrícula não encontrada no sistema.")
+                st.error("Matrícula não encontrada.")
