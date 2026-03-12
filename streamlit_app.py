@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configurações de Design
-st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
+st.set_page_config(page_title="PAINEL PREMIAÇÃO", layout="wide", page_icon="☕")
 
 # Funções de Formatação
 def f_rs(v):
