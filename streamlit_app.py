@@ -35,7 +35,7 @@ df = load()
 
 if df is not None:
     # --- CABEÇALHO ---
-    st.header("🏆 Portal de Premiação")
+    st.header("🏆 PAINEL PREMIAÇÃO")
     st.divider()
 
     c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
