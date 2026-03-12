@@ -1,6 +1,44 @@
-# ... (parte inicial do código de carregamento do df igual)
+import streamlit as st
+import pandas as pd
 
+# 1. Configurações Iniciais
+st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
+
+# Funções de Formatação (Devem vir antes de serem usadas)
+def formatar_reais(valor):
+    if pd.isna(valor) or str(valor).strip() in ['-', '', '0', '0,00']:
+        return "R$ 0,00"
+    limpo = str(valor).replace('R', '').replace('$', '').strip()
+    return f"R$ {limpo}"
+
+def formatar_pct(valor):
+    try:
+        num = float(str(valor).replace('%', '').replace(',', '.'))
+        return f"{int(num)}%"
+    except:
+        return str(valor)
+
+# 2. Função de Carregamento
+def carregar():
+    try:
+        try:
+            df_local = pd.read_csv("dados.csv", encoding='utf-8')
+        except:
+            df_local = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        df_local.columns = [c.strip().upper() for c in df_local.columns]
+        return df_local
+    except Exception as e:
+        st.error(f"Erro ao carregar o arquivo: {e}")
+        return None
+
+# --- AQUI É O PONTO CRÍTICO ---
+# Primeiro criamos a variável df
+df = carregar()
+
+# Só depois verificamos se ela existe
 if df is not None:
+    st.title("🏆 Portal de Premiação")
+    
     col_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[col_mat] = df[col_mat].astype(str).str.strip()
     
@@ -10,23 +48,17 @@ if df is not None:
     
     if acesso:
         acesso = acesso.strip()
-        # Se for ADMIN, mostra tudo
         if acesso.upper() == "ADMIN":
-            st.subheader("📊 Visão Geral - Admin")
-            st.dataframe(df, use_container_width=True)
-        # SE NÃO FOR ADMIN, busca a promotora
+            st.dataframe(df)
         else:
             dados = df[df[col_mat] == acesso]
-            
             if not dados.empty:
                 col_n = [c for c in df.columns if 'NOME' in c][0]
                 st.header(f"Olá, {dados.iloc[0][col_n]}! 👋")
                 
-                # Tratamento do Mês
+                # Tratamento de Mês
                 dados['MÊS'] = dados['MÊS'].astype(str).str.strip().str.upper()
-                meses = dados['MÊS'].unique()
-                mes_sel = st.selectbox("📅 Selecione o mês:", meses)
-                
+                mes_sel = st.selectbox("📅 Selecione o mês:", dados['MÊS'].unique())
                 info = dados[dados['MÊS'] == mes_sel].iloc[0]
                 
                 st.markdown("### 📊 Seus Indicadores")
@@ -57,3 +89,5 @@ if df is not None:
                 st.success(f"### 🏆 VALOR TOTAL A RECEBER: {total_final}")
             else:
                 st.error("Matrícula não encontrada.")
+else:
+    st.warning("Aguardando carregamento do arquivo de dados...")
