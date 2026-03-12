@@ -1,48 +1,17 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuração da Página e Título do Navegador
-st.set_page_config(page_title="Portal de Premiação | 3 Corações", layout="wide", page_icon="☕")
+# 1. Configuração da Página
+st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
 
-# 2. INJEÇÃO DE CSS PARA LAYOUT AVANÇADO
-st.markdown("""
-    <style>
-    /* Estilo global */
-    .stApp { background-color: #F4F7F6; }
-    
-    /* Títulos e Textos */
-    h1 { color: #556B2F; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    
-    /* Customização dos Containers (Cards) */
-    div[data-testid="stMetric"] {
-        background-color: white;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border-bottom: 4px solid #556B2F;
-    }
+# 2. Injeção de CSS em Linha Única (Evita o TypeError do Python 3.14)
+st.markdown('<style>.stApp{background-color:#F4F7F6}div[data-testid="stMetric"]{background-color:white;padding:15px;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);border-bottom:4px solid #556B2F}.stTextInput>div>div>input{border-radius:8px;border:1px solid #556B2F}</style>', unsafe_allow_input_html=True)
 
-    /* Banner de Sucesso (Total a Receber) */
-    .stAlert {
-        border-radius: 15px;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    /* Estilização da barra lateral e inputs */
-    .stTextInput>div>div>input { border-radius: 8px; border: 1px solid #556B2F; }
-    </style>
-""", unsafe_allow_input_html=True)
-
-# 3. CABEÇALHO COM LOGO (Simulado com texto estilizado)
-col_logo, col_tit = st.columns([1, 4])
-with col_tit:
-    st.title("🏆 Portal de Premiação")
-    st.write("Acompanhe sua performance mensal de forma simples e rápida.")
-
+# 3. Cabeçalho
+st.title("🏆 Portal de Premiação")
+st.write("Acompanhe seus resultados mensais.")
 st.divider()
 
-# Funções de Suporte
 def carregar():
     try:
         try: df = pd.read_csv("dados.csv", encoding='utf-8')
@@ -68,16 +37,14 @@ if df is not None:
     col_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[col_mat] = df[col_mat].astype(str).str.strip()
     
-    # Barra lateral ou topo para login
+    # Login na Lateral para deixar o centro limpo
     with st.sidebar:
         st.header("🔑 Acesso")
         acesso = st.text_input("Sua Matrícula:", placeholder="Ex: 1-46532")
-        st.info("Utilize sua matrícula padrão para consultar.")
-
+    
     if acesso:
         acesso = acesso.strip()
         if acesso.upper() == "ADMIN":
-            st.subheader("📊 Painel Geral de Dados")
             st.dataframe(df, use_container_width=True)
         else:
             dados = df[df[col_mat] == acesso]
@@ -85,11 +52,11 @@ if df is not None:
                 col_n = [c for c in df.columns if 'NOME' in c][0]
                 st.header(f"Olá, {dados.iloc[0][col_n]}! 👋")
                 
-                mes_sel = st.selectbox("📅 Escolha o mês de referência:", dados['MÊS'].unique())
+                mes_sel = st.selectbox("📅 Mês de referência:", dados['MÊS'].unique())
                 info = dados[dados['MÊS'] == mes_sel].iloc[0]
                 
-                # --- ÁREA DOS CARDS ---
-                st.markdown("### 📊 Seus Indicadores")
+                # --- CARDS DE INDICADORES ---
+                st.markdown("### 📊 Indicadores de Performance")
                 c1, c2, c3 = st.columns(3)
                 
                 with c1:
@@ -106,18 +73,18 @@ if df is not None:
                     st.metric("📈 SELL OUT", formatar_pct(info.get('AING SELLOUT %', 0)))
                     st.write(f"💰 Prêmio: **{formatar_reais(info.get('PREMIAÇÃO SELLOUT', 0))}**")
 
-                st.markdown("<br>", unsafe_allow_input_html=True)
+                st.divider()
                 
-                # TOTALIZADOR EM DESTAQUE
+                # Destaque do Total
                 total_final = formatar_reais(info.get('TOTAL A RECEBER', '0,00'))
                 st.success(f"## 🏆 VALOR TOTAL A RECEBER: {total_final}")
 
-                # OBSERVAÇÕES
+                # Observações em quadro expansível
                 obs = info.get('OBSERVAÇÕES GERAIS', '')
                 if pd.notna(obs) and str(obs).strip() not in ['', '0', 'nan', 'NAN']:
-                    with st.expander("📝 Ver Observações Detalhadas", expanded=True):
+                    with st.expander("📝 Notas e Observações", expanded=True):
                         st.write(obs)
             else:
-                st.error("Matrícula não encontrada no banco de dados.")
+                st.error("Matrícula não encontrada.")
 else:
-    st.error("Erro ao carregar a base de dados. Verifique o arquivo dados.csv no GitHub.")
+    st.error("Erro ao carregar base de dados.")
