@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configurações
+# 1. Configurações e Título da Guia
 st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
 
-# Funções de Formatação
+# Funções de Formatação (Mantidas para segurança dos dados)
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','nan']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -21,7 +21,7 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return "0%"
 
-# 2. Dados
+# 2. Carregamento
 @st.cache_data
 def load():
     try:
@@ -34,72 +34,49 @@ def load():
 df = load()
 
 if df is not None:
-    # Cabeçalho Centralizado
-    _, col_tit, _ = st.columns([1, 2, 1])
-    col_tit.header("🏆 Portal de Premiação")
-    st.divider()
+    # --- HEADER DESIGN ---
+    # Centralizando o cabeçalho em uma coluna estreita para elegância
+    _, center_col, _ = st.columns([1, 2, 1])
+    with center_col:
+        st.write("") 
+        st.markdown("<h1 style='text-align: center;'>🏆 Portal de Premiação</h1>", unsafe_allow_input_html=True)
+        st.divider()
 
-    c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-    df[c_mat] = df[c_mat].astype(str).str.strip()
+        # Login e Mês agrupados em um mini-card
+        with st.container(border=True):
+            c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
+            df[c_mat] = df[c_mat].astype(str).str.strip()
+            
+            acesso = st.text_input("IDENTIFICAÇÃO (MATRÍCULA):", placeholder="Ex: 1-49174")
+            
+            if acesso:
+                u_df = df[df[c_mat] == acesso.strip()]
+                if not u_df.empty:
+                    u_df['MÊS'] = u_df['MÊS'].astype(str).str.upper()
+                    m_sel = st.selectbox("REFERÊNCIA:", u_df['MÊS'].unique())
+                    r = u_df[u_df['MÊS'] == m_sel].iloc[0]
+                else:
+                    st.error("Matrícula não localizada.")
+                    st.stop()
+            else:
+                st.info("Aguardando login...")
+                st.stop()
+
+    # --- ÁREA DE RESULTADOS ---
+    st.write("")
+    col_n = [c for c in df.columns if 'NOME' in c][0]
+    st.markdown(f"<h3 style='text-align: center;'>Olá, {u_df.iloc[0][col_n]}! 👋</h3>", unsafe_allow_input_html=True)
+    st.markdown("<p style='text-align: center; color: gray;'>Confira abaixo seu desempenho e premiações</p>", unsafe_allow_input_html=True)
     
-    # Login Centralizado
-    _, col_login, _ = st.columns([1, 1, 1])
-    with col_login:
-        acesso = st.text_input("MATRÍCULA:", placeholder="Digite aqui...")
+    # Criando colunas de respiro para os indicadores não ficarem esticados
+    _, body_col, _ = st.columns([0.2, 5, 0.2])
     
-    if acesso:
-        u_df = df[df[c_mat] == acesso.strip()]
-        if not u_df.empty:
-            # Saudação e Mês
-            _, col_nome, _ = st.columns([1, 2, 1])
-            n_col = [c for c in df.columns if 'NOME' in c][0]
-            col_nome.subheader(f"Olá, {u_df.iloc[0][n_col]}! 👋")
-            
-            _, col_mes, _ = st.columns([1, 1, 1])
-            with col_mes:
-                u_df['MÊS'] = u_df['MÊS'].astype(str).str.upper()
-                m_sel = st.selectbox("MÊS:", u_df['MÊS'].unique())
-            
-            r = u_df[u_df['MÊS'] == m_sel].iloc[0]
-            
-            # --- ÁREA DE INDICADORES ---
-            st.write("### 📊 Seus Indicadores")
-            c1, c2, c3 = st.columns(3)
-            
-            with c1:
-                with st.container(border=True):
-                    st.write("🎯 **ADERÊNCIA**")
-                    # Truque da coluna central para centralizar a métrica
-                    _, mc, _ = st.columns([1, 4, 1])
-                    mc.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
-                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
-            
-            with c2:
-                with st.container(border=True):
-                    st.write("🏪 **LOJA DO CORAÇÃO**")
-                    _, mc, _ = st.columns([1, 4, 1])
-                    mc.metric("Medalha", str(r.get('MEDALHA LOJA DO CORAÇÃO', '-')))
-                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
-            
-            with c3:
-                with st.container(border=True):
-                    st.write("📈 **SELLOUT**")
-                    meta, real = f_nm(r.get('META SELLOUT',0)), f_nm(r.get('REAL SELLOUT',0))
-                    # Centralizando as sub-informações
-                    st.write(f"🎯 Meta: {meta} | 📈 Real: {real}")
-                    _, mc, _ = st.columns([1, 4, 1])
-                    mc.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
-                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
-            
-            st.divider()
-            
-            # Totalizador Centralizado
-            _, col_total, _ = st.columns([1, 2, 1])
-            col_total.success(f"### 🏆 TOTAL A RECEBER: {f_rs(r.get('TOTAL A RECEBER', 0))}")
-            
-            # Observações
-            obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
-            if obs not in ['nan', '0', '', 'None']:
-                st.info(f"📝 **Notas:** {obs}")
-        else:
-            st.error("Matrícula não encontrada.")
+    with body_col:
+        st.write("#### 📊 Seus Indicadores")
+        c1, c2, c3 = st.columns(3)
+        
+        with c1:
+            with st.container(border=True):
+                st.markdown("<p style='text-align: center; font-weight: bold;'>🎯 ADERÊNCIA</p>", unsafe_allow_input_html=True)
+                st.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)), help="Aderência ao roteiro planejado")
+                st.markdown(f"<p style='text-align: center; color: #28a745; font-size: 18px;'><b>{f_rs(r.get('PREMIA
