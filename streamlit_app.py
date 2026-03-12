@@ -74,17 +74,20 @@ if df is not None:
 
                 st.write("---")
                 # Destaque do Total usando comandos simples e seguros
+                st.divider() # Cria uma linha divisória bonita
+                
+                # Destaque do Total usando apenas comandos nativos (SEM ERRO)
                 total_valor = info.get('TOTAL A RECEBER', 0)
                 
-                st.subheader(f"💰 TOTAL A RECEBER: R$ {total_valor}")
+                # Isso cria um destaque grande e limpo
+                st.header(f"💰 TOTAL A RECEBER: R$ {total_valor}")
                 
-                # Se quiser manter o fundo amarelo, usamos este comando em linha única:
-                estilo_total = f'<div style="background-color:#FFD700; padding:20px; border-radius:10px; text-align:center;"><h2 style="color:#333; margin:0;">💰 TOTAL A RECEBER: R$ {total_valor}</h2></div>'
-                st.markdown(estilo_total, unsafe_allow_input_html=True)
+                # Se quiser uma corzinha suave, use o st.success para o total
+                st.success(f"Valor calculado para o fechamento de {mes_sel}")
                 
                 # Observações
                 obs = info.get('OBSERVAÇÕES GERAIS', '')
-                if pd.notna(obs) and obs != '':
+                if pd.notna(obs) and obs != '' and obs != '0':
                     st.info(f"**Nota:** {obs}")
             else:
                 st.error(f"Matrícula '{acesso}' não encontrada.")
