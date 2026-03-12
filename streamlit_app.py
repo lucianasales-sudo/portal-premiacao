@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuração da Página
 st.set_page_config(page_title="Portal 3 Corações", layout="wide")
 
 st.title("☕ Portal de Premiação")
@@ -18,13 +17,22 @@ def carregar():
     except:
         return None
 
+# Função para limpar e arredondar porcentagem
+def formatar_porcentagem(valor):
+    try:
+        # Tira o símbolo %, troca vírgula por ponto e vira número
+        num = float(str(valor).replace('%', '').replace(',', '.'))
+        return f"{int(num)}%" # Transforma em inteiro para sumir as casas decimais
+    except:
+        return str(valor)
+
 df = carregar()
 
 if df is not None:
     col_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[col_mat] = df[col_mat].astype(str).str.strip()
     
-    acesso = st.text_input("👤 Digite sua MATRÍCULA:", placeholder="Ex: 1-37507")
+    acesso = st.text_input("👤 Digite sua MATRÍCULA:", placeholder="Ex: 1-46532")
 
     if acesso:
         acesso = acesso.strip()
@@ -40,47 +48,27 @@ if df is not None:
                 mes_sel = st.selectbox("📅 Selecione o mês:", dados['MÊS'].unique())
                 info = dados[dados['MÊS'] == mes_sel].iloc[0]
                 
-                st.write(f"Resultados de **{mes_sel}**")
-                
                 c1, c2, c3 = st.columns(3)
                 
                 with c1:
                     with st.container(border=True):
                         st.subheader("🎯 ADERÊNCIA")
-                        val_ad = str(info.get('PRODUTIVIDADE ADERENCIA ROTEIRO', '0')).replace('%', '')
-                        st.metric("Performance", f"{val_ad}%")
-                        # Colocando o R$ e emoji de dinheiro
-                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0)}**")
+                        # Formata para tirar casas decimais
+                        perf_formatada = formatar_porcentagem(info.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0))
+                        st.metric("Performance", perf_formatada)
+                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO ADERENCIA ROTEIRO', '0,00')}**")
                 
                 with c2:
                     with st.container(border=True):
-                        st.subheader("🏅 LOJA DO CORAÇÃO")
+                        st.subheader("🏪 LOJA DO CORAÇÃO") # Ícone de loja
                         medalha = str(info.get('MEDALHA LOJA DO CORAÇÃO', '-'))
                         
-                        # Lógica para escolher o emoji da medalha
-                        emoji_m = "🎖️"
+                        emoji_m = "🏅"
                         if "Ouro" in medalha: emoji_m = "🥇"
                         elif "Prata" in medalha: emoji_m = "🥈"
                         elif "Bronze" in medalha: emoji_m = "🥉"
                         elif "Diamante" in medalha: emoji_m = "💎"
+                        elif "Sem medalha" in medalha: emoji_m = "⚪"
                         
                         st.metric("Medalha", f"{emoji_m} {medalha}")
-                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO MEDALHA LC', 0)}**")
-                
-                with c3:
-                    with st.container(border=True):
-                        st.subheader("📈 SELL OUT")
-                        val_so = str(info.get('AING SELLOUT %', '0')).replace('%', '')
-                        st.metric("Atingimento", f"{val_so}%")
-                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO SELLOUT', 0)}**")
-
-                st.divider()
-                
-                total = info.get('TOTAL A RECEBER', 0)
-                st.success(f"### 🏆 VALOR TOTAL A RECEBER: R$ {total}")
-                
-                obs = info.get('OBSERVAÇÕES GERAIS', '')
-                if pd.notna(obs) and obs != '' and obs != '0':
-                    st.info(f"💡 **Nota:** {obs}")
-            else:
-                st.error("Matrícula não encontrada.")
+                        st.write(f"💰
