@@ -7,7 +7,7 @@ st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="�
 # Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','nan']: return "R$ 0,00"
-    l = str(v).replace('R','').replace('$','').strip()
+    l = str(v).replace('R','').replace('$','').replace('S','').strip()
     return f"R$ {l}"
 
 def f_nm(v):
@@ -34,7 +34,7 @@ def load():
 df = load()
 
 if df is not None:
-    # Centralizando o Título com colunas
+    # Cabeçalho Centralizado
     _, col_tit, _ = st.columns([1, 2, 1])
     col_tit.header("🏆 Portal de Premiação")
     st.divider()
@@ -50,12 +50,11 @@ if df is not None:
     if acesso:
         u_df = df[df[c_mat] == acesso.strip()]
         if not u_df.empty:
-            # Saudação Centralizada
+            # Saudação e Mês
             _, col_nome, _ = st.columns([1, 2, 1])
-            nome_u = u_df.iloc[0][[c for c in df.columns if 'NOME' in c][0]]
-            col_nome.subheader(f"Olá, {nome_u}! 👋")
+            n_col = [c for c in df.columns if 'NOME' in c][0]
+            col_nome.subheader(f"Olá, {u_df.iloc[0][n_col]}! 👋")
             
-            # Seletor de Mês Centralizado
             _, col_mes, _ = st.columns([1, 1, 1])
             with col_mes:
                 u_df['MÊS'] = u_df['MÊS'].astype(str).str.upper()
@@ -63,42 +62,40 @@ if df is not None:
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # Valores pré-calculados
-            v_p1 = f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))
-            v_p2 = f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))
-            v_p3 = f_rs(r.get('PREMIAÇÃO SELLOUT', 0))
-            v_tt = f_rs(r.get('TOTAL A RECEBER', 0))
-            
+            # --- ÁREA DE INDICADORES ---
             st.write("### 📊 Seus Indicadores")
-            
-            # Cards (O Streamlit centraliza os itens dentro dos cards por padrão no mobile)
             c1, c2, c3 = st.columns(3)
             
             with c1:
                 with st.container(border=True):
-                    st.write("**🎯 ADERÊNCIA**")
-                    st.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
-                    st.write(f"💰 Prêmio: **{v_p1}**")
+                    st.write("🎯 **ADERÊNCIA**")
+                    # Truque da coluna central para centralizar a métrica
+                    _, mc, _ = st.columns([1, 4, 1])
+                    mc.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
+                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
             
             with c2:
                 with st.container(border=True):
-                    st.write("**🏪 LOJA DO CORAÇÃO**")
-                    st.metric("Medalha", str(r.get('MEDALHA LOJA DO CORAÇÃO', '-')))
-                    st.write(f"💰 Prêmio: **{v_p2}**")
+                    st.write("🏪 **LOJA DO CORAÇÃO**")
+                    _, mc, _ = st.columns([1, 4, 1])
+                    mc.metric("Medalha", str(r.get('MEDALHA LOJA DO CORAÇÃO', '-')))
+                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
             
             with c3:
                 with st.container(border=True):
-                    st.write("**📈 SELLOUT**")
-                    m, re = f_nm(r.get('META SELLOUT',0)), f_nm(r.get('REAL SELLOUT',0))
-                    st.write(f"🎯 Meta: {m} | 📈 Real: {re}")
-                    st.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
-                    st.write(f"💰 Prêmio: **{v_p3}**")
+                    st.write("📈 **SELLOUT**")
+                    meta, real = f_nm(r.get('META SELLOUT',0)), f_nm(r.get('REAL SELLOUT',0))
+                    # Centralizando as sub-informações
+                    st.write(f"🎯 Meta: {meta} | 📈 Real: {real}")
+                    _, mc, _ = st.columns([1, 4, 1])
+                    mc.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
+                    st.write(f"💰 Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
             
             st.divider()
             
             # Totalizador Centralizado
             _, col_total, _ = st.columns([1, 2, 1])
-            col_total.success(f"### 🏆 TOTAL A RECEBER: {v_tt}")
+            col_total.success(f"### 🏆 TOTAL A RECEBER: {f_rs(r.get('TOTAL A RECEBER', 0))}")
             
             # Observações
             obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
