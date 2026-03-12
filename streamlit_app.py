@@ -4,7 +4,6 @@ import pandas as pd
 # 1. Configuração da Página
 st.set_page_config(page_title="Portal 3 Corações", layout="wide", page_icon="☕")
 
-# Título Principal
 st.title("🏆 Portal de Premiação")
 st.write("Acompanhe seus resultados e metas mensais.")
 st.divider()
@@ -21,7 +20,7 @@ def carregar():
         return None
 
 def formatar_reais(valor):
-    if pd.isna(valor) or str(valor).strip() in ['-', '', '0']:
+    if pd.isna(valor) or str(valor).strip() in ['-', '', '0', '0,00']:
         return "R$ 0,00"
     limpo = str(valor).replace('R', '').replace('$', '').strip()
     return f"R$ {limpo}"
@@ -36,11 +35,9 @@ def formatar_pct(valor):
 df = carregar()
 
 if df is not None:
-    # Garante que a coluna MATRÍCULA existe e é string
     col_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[col_mat] = df[col_mat].astype(str).str.strip()
     
-    # Barra lateral para o Login
     with st.sidebar:
         st.header("🔑 Acesso")
         acesso = st.text_input("Digite sua MATRÍCULA:", placeholder="Ex: 1-46532")
@@ -56,10 +53,10 @@ if df is not None:
                 col_n = [c for c in df.columns if 'NOME' in c][0]
                 st.header(f"Olá, {dados.iloc[0][col_n]}! 👋")
                 
-                mes_sel = st.selectbox("📅 Selecione o mês:", dados['MÊS'].unique())
+                meses = dados['MÊS'].unique()
+                mes_sel = st.selectbox("📅 Selecione o mês:", meses)
                 info = dados[dados['MÊS'] == mes_sel].iloc[0]
                 
-                # CARDS USANDO CONTAINER NATIVO (Sem risco de TypeError)
                 st.markdown("### 📊 Seus Indicadores")
                 c1, c2, c3 = st.columns(3)
                 
@@ -74,11 +71,3 @@ if df is not None:
                         st.write("🏪 **LOJA DO CORAÇÃO**")
                         med = str(info.get('MEDALHA LOJA DO CORAÇÃO', '-'))
                         emo = "🥇" if "Ouro" in med else "🥈" if "Prata" in med else "🥉" if "Bronze" in med else "💎" if "Diamante" in med else "⚪"
-                        st.metric("Medalha", f"{emo} {med}")
-                        st.write(f"Prêmio: **{formatar_reais(info.get('PREMIAÇÃO MEDALHA LC', 0))}**")
-                
-                with c3:
-                    with st.container(border=True):
-                        st.write("📈 **SELL OUT**")
-                        st.metric("Atingimento", formatar_pct(info.get('AING SELLOUT %', 0)))
-                        st.write(f
