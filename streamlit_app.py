@@ -34,14 +34,13 @@ def load():
 df = load()
 
 if df is not None:
-    # --- CABEÇALHO NATIVO (Sem HTML para evitar TypeError) ---
+    # --- CABEÇALHO ---
     st.header("🏆 Portal de Premiação")
     st.divider()
 
     c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
     df[c_mat] = df[c_mat].astype(str).str.strip()
     
-    # Login e Mês (Lado a lado no computador, empilhados no celular)
     col_l, col_m = st.columns(2)
     with col_l:
         acesso = st.text_input("MATRÍCULA:", placeholder="Ex: 1-49174")
@@ -49,7 +48,7 @@ if df is not None:
     if acesso:
         u_df = df[df[c_mat] == acesso.strip()]
         if not u_df.empty:
-            # Saudação Curta (Pega só o primeiro nome)
+            # Saudação Curta
             nome_completo = u_df.iloc[0][[c for c in df.columns if 'NOME' in c][0]]
             p_nome = str(nome_completo).split()[0]
             st.subheader(f"Olá, {p_nome}! 👋")
@@ -60,14 +59,15 @@ if df is not None:
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # --- ÁREA DE INDICADORES ---
-            st.write("### 📊 Indicadores")
+            # --- ÁREA DE INDICADORES (Sem ícone ao lado do título) ---
+            st.write("### Indicadores") # Ícone removido aqui
+            
             c1, c2, c3 = st.columns(3)
             
             with c1:
                 with st.container(border=True):
                     st.write("**🎯 ADERÊNCIA**")
-                    st.metric("Perf.", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
+                    st.metric("Performance", f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
             
             with c2:
@@ -79,17 +79,15 @@ if df is not None:
             with c3:
                 with st.container(border=True):
                     st.write("**📈 SELLOUT**")
-                    m_val = f_nm(r.get('META SELLOUT', 0))
-                    r_val = f_nm(r.get('REAL SELLOUT', 0))
-                    st.write(f"M: {m_val} | R: {r_val}")
-                    st.metric("Ating.", f_pc(r.get('AING SELLOUT %', 0)))
+                    # Meta e Real por extenso e um abaixo do outro para mobile
+                    st.write(f"Meta: **{f_nm(r.get('META SELLOUT', 0))}**")
+                    st.write(f"Real: **{f_nm(r.get('REAL SELLOUT', 0))}**")
+                    st.metric("Atingimento", f_pc(r.get('AING SELLOUT %', 0)))
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
 
-            # --- TOTALIZADOR NATIVO (Otimizado para Mobile) ---
+            # --- TOTALIZADOR ---
             st.divider()
             total_final = f_rs(r.get('TOTAL A RECEBER', 0))
-            
-            # O st.success é o componente mais estável para destacar o valor final
             st.success(f"🏆 TOTAL: {total_final}")
             
             # Observações
