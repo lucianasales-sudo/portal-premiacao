@@ -17,12 +17,11 @@ def carregar():
     except:
         return None
 
-# Função para limpar e arredondar porcentagem
-def formatar_porcentagem(valor):
+# Função para arredondar porcentagem
+def formatar_pct(valor):
     try:
-        # Tira o símbolo %, troca vírgula por ponto e vira número
         num = float(str(valor).replace('%', '').replace(',', '.'))
-        return f"{int(num)}%" # Transforma em inteiro para sumir as casas decimais
+        return f"{int(num)}%"
     except:
         return str(valor)
 
@@ -37,7 +36,6 @@ if df is not None:
     if acesso:
         acesso = acesso.strip()
         if acesso.upper() == "ADMIN":
-            st.subheader("📊 Painel Geral")
             st.dataframe(df)
         else:
             dados = df[df[col_mat] == acesso]
@@ -53,22 +51,26 @@ if df is not None:
                 with c1:
                     with st.container(border=True):
                         st.subheader("🎯 ADERÊNCIA")
-                        # Formata para tirar casas decimais
-                        perf_formatada = formatar_porcentagem(info.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0))
-                        st.metric("Performance", perf_formatada)
+                        st.metric("Performance", formatar_pct(info.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0)))
                         st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO ADERENCIA ROTEIRO', '0,00')}**")
                 
                 with c2:
                     with st.container(border=True):
-                        st.subheader("🏪 LOJA DO CORAÇÃO") # Ícone de loja
-                        medalha = str(info.get('MEDALHA LOJA DO CORAÇÃO', '-'))
-                        
-                        emoji_m = "🏅"
-                        if "Ouro" in medalha: emoji_m = "🥇"
-                        elif "Prata" in medalha: emoji_m = "🥈"
-                        elif "Bronze" in medalha: emoji_m = "🥉"
-                        elif "Diamante" in medalha: emoji_m = "💎"
-                        elif "Sem medalha" in medalha: emoji_m = "⚪"
-                        
-                        st.metric("Medalha", f"{emoji_m} {medalha}")
-                        st.write(f"💰
+                        st.subheader("🏪 LOJA DO CORAÇÃO")
+                        med = str(info.get('MEDALHA LOJA DO CORAÇÃO', '-'))
+                        emo = "🥇" if "Ouro" in med else "🥈" if "Prata" in med else "🥉" if "Bronze" in med else "💎" if "Diamante" in med else "⚪"
+                        st.metric("Medalha", f"{emo} {med}")
+                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO MEDALHA LC', '0,00')}**")
+                
+                with c3:
+                    with st.container(border=True):
+                        st.subheader("📈 SELL OUT")
+                        st.metric("Atingimento", formatar_pct(info.get('AING SELLOUT %', 0)))
+                        st.write(f"💰 **Prêmio: R$ {info.get('PREMIAÇÃO SELLOUT', '0,00')}**")
+
+                st.divider()
+                
+                total = info.get('TOTAL A RECEBER', '0,00')
+                st.success(f"### 🏆 VALOR TOTAL A RECEBER: R$ {total}")
+            else:
+                st.error("Matrícula não encontrada.")
