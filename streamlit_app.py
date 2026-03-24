@@ -4,19 +4,18 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide")
 
-# CSS para dar o aspecto de sistema profissional (Enterprise)
+# CSS para o aspecto de sistema profissional
 st.markdown("""
     <style>
     .main { background-color: #f8fafc; }
     .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     h1, h2, h3 { color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .card-header { font-weight: bold; color: #334155; border-bottom: 2px solid #e2e8f0; margin-bottom: 10px; padding-bottom: 5px; }
-    .label-text { color: #64748b; font-size: 0.9rem; }
-    .value-text { color: #1e293b; font-weight: bold; font-size: 1.1rem; }
+    .stSuccess { border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# Funções de Formatação (Mantidas conforme seu padrão)
+# Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','R$ -']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -33,7 +32,7 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return str(v)
 
-# 2. Carregamento de Dados (Lógica Robusta)
+# 2. Carregamento de Dados
 @st.cache_data
 def load():
     try:
@@ -78,7 +77,6 @@ st.title("🏆 Portal de Performance")
 st.markdown("---")
 
 if df is not None:
-    # Busca centralizada e limpa
     c_busca1, c_busca2 = st.columns([1, 2])
     with c_busca1:
         acesso = st.text_input("Sua Matrícula:", placeholder="Ex: 1-49036")
@@ -96,7 +94,7 @@ if df is not None:
             m_sel = st.selectbox("Competência/Mês:", u_df[c_mes_col].unique())
             r = u_df[u_df[c_mes_col] == m_sel].iloc[0]
             
-            st.write("") # Espaçador
+            st.write("")
 
             # --- LINHA DE CARDS ---
             col1, col2, col3 = st.columns(3)
@@ -106,13 +104,12 @@ if df is not None:
                     st.markdown('<p class="card-header">🎯 ADERÊNCIA ROTEIRO</p>', unsafe_allow_html=True)
                     st.write(f"Performance: **{f_pc(r.get('A1',0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
-                    st.write("") # alinhamento
             
             with col2:
                 with st.container(border=True):
                     st.markdown('<p class="card-header">🏪 LOJA DO CORAÇÃO</p>', unsafe_allow_html=True)
                     st.write(f"Medalha: **{r.get('L1','-')}**")
-                    st.write(f"Ponto Extra: **{r.get('P1',0)}** | Ponto Natural: **{r.get('P2',0)}**")
+                    st.write(f"P. Extra: **{r.get('P1',0)}** | P. Natural: **{r.get('P2',0)}**")
                     st.write(f"Ruptura: **{r.get('P3',0)}** | MPDV: **{r.get('P4',0)}**")
                     st.write(f"Nota: **{r.get('L0', 0)}**")
                     st.write(f"Prêmio: **{f_rs(r.get('L2',0))}**")
@@ -129,12 +126,13 @@ if df is not None:
             st.write("")
             st.success(f"### **VALOR TOTAL A RECEBER: {f_rs(r.get('TOT',0))}**")
             
-            # Observações
+            # --- BLOCO DE OBSERVAÇÕES GERAIS (NOVO) ---
             obs = str(r.get('OBSERVAÇÕES GERAIS','')).strip()
             if obs not in ['nan','0','','None']:
-                with st.expander("📝 Notas da Apuração"):
-                    st.write(obs)
+                with st.container(border=True):
+                    st.markdown('<p class="card-header">📝 OBSERVAÇÕES GERAIS</p>', unsafe_allow_html=True)
+                    st.info(obs)
         else:
-            st.warning("Matrícula não localizada no banco de dados.")
+            st.warning("Matrícula não localizada.")
 else:
-    st.info("Aguardando carregamento da base...")
+    st.info("Aguardando base de dados...")
