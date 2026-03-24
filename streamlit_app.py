@@ -1,40 +1,33 @@
-import streamlit as st
-import pandas as pd
-
-# 1. Configuração inicial (DEVE ser a primeira linha de comando st)
-st.set_page_config(page_title="PAINEL", layout="wide")
-
-# Funções de Formatação
-def f_rs(v):
-    if pd.isna(v) or str(v).strip() in ['0','0,00','-']: return "R$ 0,00"
-    l = str(v).replace('R','').replace('$','').replace('S','').strip()
-    return f"R$ {l}"
-
-def f_nm(v):
-    if pd.isna(v) or str(v) in ['0','-']: return "0"
-    return str(v).replace('R','').replace('$','').strip()
-
-def f_pc(v):
-    try:
-        n = float(str(v).replace('%','').replace(',','.'))
-        return f"{int(n)}%"
-    except: return "0%"
-
-# 2. Carregamento de Dados (Agora com st definido antes)
 @st.cache_data
 def load():
     try:
-        # Carrega dados.csv
+        # 1. Carrega dados.csv
         try: d1 = pd.read_csv("dados.csv", encoding='utf-8')
         except: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         d1.columns = [c.strip().upper() for c in d1.columns]
         
-        # Carrega BASE ABERTURA LC.csv
+        # 2. Carrega BASE ABERTURA LC.csv
         try: d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Siglas curtas para evitar quebras de linha
+        # 3. Localiza a coluna de Matrícula dinamicamente em cada arquivo
+        # Procura por 'MATRÍCULA', 'MATRICULA' ou usa a primeira coluna como reserva
+        col_m1 = [c for c in d1.columns if 'MATRIC' in c]
+        k1 = col_m1[0] if col_m1 else d1.columns[0]
+        
+        col_m2 = [c for c in d2.columns if 'MATRIC' in c]
+        k2 = col_m2[0] if col_m2 else d2.columns[0]
+
+        # 4. Padroniza para 'MATRÍCULA' para o código não quebrar depois
+        d1 = d1.rename(columns={k1: 'MATRÍCULA'})
+        d2 = d2.rename(columns={k2: 'MATRÍCULA'})
+
+        # 5. Limpa os dados das matrículas (remove espaços e vira texto)
+        d1['MATRÍCULA'] = d1['MATRÍCULA'].astype(str).str.strip()
+        d2['MATRÍCULA'] = d2['MATRÍCULA'].astype(str).str.strip()
+
+        # 6. Renomeia as demais colunas para siglas curtas (Anti-Quebra)
         d1 = d1.rename(columns={
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1',
             'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
@@ -47,30 +40,8 @@ def load():
             'TOTAL A RECEBER': 'TOT'
         })
         
-        k = 'MATRÍCULA'
-        d1[k] = d1[k].astype(str).str.strip()
-        d2[k] = d2[k].astype(str).str.strip()
-        
-        return pd.merge(d1, d2, on=k, how='left')
+        # 7. Merge final
+        return pd.merge(d1, d2, on='MATRÍCULA', how='left')
     except Exception as e:
-        st.error(f"Erro no carregamento: {e}")
+        st.error(f"Erro detalhado: {e}")
         return None
-
-df = load()
-
-# 3. Interface
-if df is not None:
-    st.header("🏆 PAINEL PREMIAÇÃO")
-    st.divider()
-    
-    col_e, col_d = st.columns(2)
-    with col_e:
-        u_in = st.text_input("MATRÍCULA:", placeholder="Digite...")
-    
-    if u_in:
-        u_df = df[df['MATRÍCULA'] == u_in.strip()]
-        
-        if not u_df.empty:
-            r = u_df.iloc[0]
-            nome_p = str(r.get('NOME', 'Colaborador')).split()[0]
-            st
