@@ -20,7 +20,7 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return "0%"
 
-# 2. Carregamento de Dados (2 Arquivos)
+# 2. Carregamento de Dados
 @st.cache_data
 def load_data():
     try:
@@ -44,7 +44,11 @@ def load_data():
             'REAL SELLOUT': 'SO_R',
             'AING SELLOUT %': 'SO_A',
             'PREMIAÇÃO SELLOUT': 'SO_V',
-            'TOTAL A RECEBER': 'TOTAL'
+            'TOTAL A RECEBER': 'TOTAL',
+            'PONTO EXTRA': 'PT_E',      # Novo
+            'PONTO NATURAL': 'PT_N',    # Novo
+            'RUPTURA': 'RUPT',          # Novo
+            'MPDV': 'MPDV'              # Novo
         })
 
         c1 = 'MATRÍCULA' if 'MATRÍCULA' in d1.columns else d1.columns[0]
@@ -81,7 +85,6 @@ if df is not None:
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # --- ÁREA DE INDICADORES (Nomes curtos = Linhas curtas) ---
             st.write("### Indicadores")
             c1, c2, c3 = st.columns(3)
             
@@ -93,26 +96,4 @@ if df is not None:
             
             with c2:
                 with st.container(border=True):
-                    st.write("🏪 **LOJA DO CORAÇÃO**")
-                    st.write(f"Medalha: **{r.get('LC_M','-')}**")
-                    # Dado da 2ª planilha (ajuste o nome da coluna se necessário)
-                    st.write(f"Status: **{r.get('STATUS','Sem info')}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('LC_V',0))}**")
-            
-            with c3:
-                with st.container(border=True):
-                    st.write("📈 **SELLOUT**")
-                    st.write(f"Meta: {f_nm(r.get('SO_M',0))} | Real: {f_nm(r.get('SO_R',0))}")
-                    st.write(f"Ating: **{f_pc(r.get('SO_A',0))}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('SO_V',0))}**")
-
-            st.divider()
-            val_tt = f_rs(r.get('TOTAL', 0))
-            st.success(f"🏆 TOTAL: {val_tt}")
-            
-            obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
-            if obs not in ['nan', '0', '', 'None']:
-                with st.expander("📝 Notas", expanded=False):
-                    st.write(obs)
-        else:
-            st.error("Matrícula não encontrada.")
+                    st
