@@ -32,7 +32,7 @@ def load():
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Siglas curtas para evitar quebra de linha
+        # Renomeia para siglas curtissimas
         d1 = d1.rename(columns={
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1',
             'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
@@ -44,8 +44,10 @@ def load():
             'PREMIAÇÃO SELLOUT': 'S4',
             'TOTAL A RECEBER': 'TOT'
         })
-        k = 'MATRÍCULA' if 'MATRÍCULA' in d1.columns else d1.columns[0]
-        d1[k], d2[k] = d1[k].astype(str).str.strip(), d2[k].astype(str).str.strip()
+        # Chave simples
+        k = 'MATRÍCULA'
+        d1[k] = d1[k].astype(str).str.strip()
+        d2[k] = d2[k].astype(str).str.strip()
         return pd.merge(d1, d2, on=k, how='left')
     except: return None
 
@@ -56,14 +58,13 @@ if df is not None:
     st.header("🏆 PAINEL PREMIAÇÃO")
     st.divider()
     
-    c_l, c_m = st.columns(2)
-    with c_l:
+    col_e, col_d = st.columns(2)
+    with col_e:
         u_in = st.text_input("MATRÍCULA:", placeholder="Digite...")
     
     if u_in:
-        k_c = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-        u_df = df[df[k_c] == u_in.strip()]
+        # Busca direta sem colchetes complexos
+        u_df = df[df['MATRÍCULA'] == u_in.strip()]
         
         if not u_df.empty:
-            cols = df.columns
-            n_l = [c for c in cols
+            r = u_df.iloc[0]
