@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide")
 
-# CSS para o aspecto de sistema profissional (Enterprise)
+# CSS para o aspecto de sistema profissional
 st.markdown("""
     <style>
     .main { background-color: #f8fafc; }
@@ -12,6 +12,7 @@ st.markdown("""
     h1, h2, h3 { color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .card-header { font-weight: bold; color: #334155; border-bottom: 2px solid #e2e8f0; margin-bottom: 10px; padding-bottom: 5px; }
     .stSuccess { border-radius: 10px; padding: 20px; font-weight: bold; }
+    .obs-box { background-color: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 10px; color: #92400e; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -32,20 +33,20 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return str(v)
 
-# 2. Carregamento de Dados (Foco exclusivo em dados.csv)
+# 2. Carregamento de Dados
 @st.cache_data
 def load():
     try:
-        # Carregamento único
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
         
         df.columns = [c.strip().upper() for c in df.columns]
 
-        # Busca inteligente de colunas críticas para evitar erros de acento
+        # MAPEAMENTO BUSCA SEGURA (Busca apenas parte da palavra para evitar erro de acento)
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
         
+        # Busca por 'OBSERV' em qualquer lugar da coluna
         c_obs = [c for c in df.columns if 'OBSERV' in c]
         if c_obs: df = df.rename(columns={c_obs[0]: 'OBS_GERAIS'})
 
@@ -53,7 +54,6 @@ def load():
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
 
-        # Mapeamento de Indicadores
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -64,7 +64,7 @@ def load():
         }
         return df.rename(columns=m)
     except Exception as e:
-        st.error(f"Erro ao carregar o arquivo dados.csv: {e}")
+        st.error(f"Erro: {e}")
         return None
 
 df = load()
@@ -74,31 +74,27 @@ st.title("🏆 Portal de Performance")
 st.markdown("---")
 
 if df is not None:
-    # Área de Busca
-    c_busca1, c_busca2 = st.columns([1, 2])
+    c_busca1, _ = st.columns([1, 2])
     with c_busca1:
-        acesso = st.text_input("Digite sua Matrícula:", placeholder="Ex: 1-49036")
+        acesso = st.text_input("Sua Matrícula:", placeholder="Ex: 1-49036")
     
     if acesso:
-        u_id = acesso.strip()
-        u_df = df[df['ID_BUSCA'] == u_id]
+        u_df = df[df['ID_BUSCA'] == acesso.strip()]
         
         if not u_df.empty:
-            # Saudação pelo primeiro nome
+            row_zero = u_df.iloc[0]
             n_cols = [c for c in df.columns if 'NOME' in c]
-            nome_f = str(u_df.iloc[0].get(n_cols[0], 'Colaborador'))
+            nome_f = str(row_zero.get(n_cols[0], 'Colaborador'))
             st.subheader(f"Olá, {nome_f.split()[0]}! 👋")
             
-            # Seletor de Mês (com busca inteligente de coluna)
             c_mes_col = [c for c in u_df.columns if 'M' in c and 'S' in c][0]
             m_sel = st.selectbox("Selecione o Mês:", u_df[c_mes_col].unique())
             r = u_df[u_df[c_mes_col] == m_sel].iloc[0]
             
             st.write("")
 
-            # --- LINHA DE CARDS ---
+            # --- CARDS PRINCIPAIS ---
             col1, col2, col3 = st.columns(3)
-            
             with col1:
                 with st.container(border=True):
                     st.markdown('<p class="card-header">🎯 ADERÊNCIA ROTEIRO</p>', unsafe_allow_html=True)
@@ -122,18 +118,22 @@ if df is not None:
                     st.write(f"Ating: **{f_pc(r.get('S3',0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('S4',0))}**")
 
-            # --- TOTALIZADOR ---
             st.write("")
             st.success(f"### **VALOR TOTAL A RECEBER: {f_rs(r.get('TOT',0))}**")
             
-            # --- BLOCO DE OBSERVAÇÕES GERAIS ---
-            obs = str(r.get('OBS_GERAIS','')).strip()
-            if obs not in ['nan','0','','None']:
-                st.write("")
+            # --- BLOCO DE OBSERVAÇÕES (FORÇADO) ---
+            st.write("")
+            # Pega o valor da coluna de observações
+            texto_obs = str(r.get('OBS_GERAIS','')).strip()
+            
+            # Se o texto for diferente de vazio ou "nan"
+            if texto_obs not in ['nan', '0', '', 'None']:
                 with st.container(border=True):
                     st.markdown('<p class="card-header">📝 OBSERVAÇÕES GERAIS</p>', unsafe_allow_html=True)
-                    st.markdown(f'<div style="color: #475569; line-height: 1.6;">{obs}</div>', unsafe_allow_html=True)
+                    st.info(texto_obs)
+            else:
+                # Caso queira que o bloco apareça mesmo vazio, descomente a linha abaixo:
+                # st.write("Nenhuma observação para este período.")
+                pass
         else:
-            st.warning("Matrícula não localizada no banco de dados.")
-else:
-    st.info("Aguardando carregamento da base de dados...")
+            st.warning("Matrícula não encontrada.")
