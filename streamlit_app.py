@@ -21,17 +21,37 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return "0%"
 
-# 2. Carregamento de Dados
+# 2. Carregamento de Dados (Lógica para 2 arquivos)
 @st.cache_data
-def load():
+def load_data():
     try:
-        try: df = pd.read_csv("dados.csv", encoding='utf-8')
-        except: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
-        df.columns = [c.strip().upper() for c in df.columns]
-        return df
-    except: return None
+        # Carrega Planilha Principal (Premiação)
+        try: df1 = pd.read_csv("dados.csv", encoding='utf-8')
+        except: df1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        df1.columns = [c.strip().upper() for c in df1.columns]
 
-df = load()
+        # Carrega Planilha Secundária (Abertura LC)
+        try: df2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
+        except: df2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
+        df2.columns = [c.strip().upper() for c in df2.columns]
+
+        # Garante que a coluna de união seja STRING e esteja limpa
+        c_mat1 = 'MATRÍCULA' if 'MATRÍCULA' in df1.columns else df1.columns[0]
+        c_mat2 = 'MATRÍCULA' if 'MATRÍCULA' in df2.columns else df2.columns[0]
+        
+        df1[c_mat1] = df1[c_mat1].astype(str).str.strip()
+        df2[c_mat2] = df2[c_mat2].astype(str).str.strip()
+
+        # UNE AS DUAS PLANILHAS (Merge)
+        # O 'left' garante que todos da planilha de prêmios apareçam, mesmo sem dados na LC
+        df_final = pd.merge(df1, df2, left_on=c_mat1, right_on=c_mat2, how='left', suffixes=('', '_LC'))
+        
+        return df_final
+    except Exception as e:
+        st.error(f"Erro ao carregar arquivos: {e}")
+        return None
+
+df = load_data()
 
 if df is not None:
     # --- CABEÇALHO ---
@@ -39,7 +59,6 @@ if df is not None:
     st.divider()
 
     c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-    df[c_mat] = df[c_mat].astype(str).str.strip()
     
     col_l, col_m = st.columns(2)
     with col_l:
@@ -48,8 +67,8 @@ if df is not None:
     if acesso:
         u_df = df[df[c_mat] == acesso.strip()]
         if not u_df.empty:
-            nome_completo = u_df.iloc[0][[c for c in df.columns if 'NOME' in c][0]]
-            p_nome = str(nome_completo).split()[0]
+            nome_col = [c for c in df.columns if 'NOME' in c][0]
+            p_nome = str(u_df.iloc[0][nome_col]).split()[0]
             st.subheader(f"Olá, {p_nome}! 👋")
             
             with col_m:
@@ -60,13 +79,11 @@ if df is not None:
             
             st.write("### Indicadores")
             
-            # --- ÁREA DE CARDS HARMONIZADOS ---
             c1, c2, c3 = st.columns(3)
             
             with c1:
                 with st.container(border=True):
                     st.write("🎯 **ADERÊNCIA**")
-                    # Em vez de st.metric, usamos markdown para controle de tamanho
                     st.write(f"Performance: **{f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))}**")
             
@@ -74,31 +91,4 @@ if df is not None:
                 with st.container(border=True):
                     st.write("🏪 **LOJA DO CORAÇÃO**")
                     med = str(r.get('MEDALHA LOJA DO CORAÇÃO', '-'))
-                    st.write(f"Medalha: **{med}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))}**")
-            
-            with c3:
-                with st.container(border=True):
-                    st.write("📈 **SELLOUT**")
-                    meta = f_nm(r.get('META SELLOUT', 0))
-                    real = f_nm(r.get('REAL SELLOUT', 0))
-                    ating = f_pc(r.get('AING SELLOUT %', 0))
-                    
-                    st.write(f"Meta: **{meta}**")
-                    st.write(f"Real: **{real}**")
-                    # Atingimento agora com tamanho equilibrado
-                    st.write(f"Atingimento: **{ating}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('PREMIAÇÃO SELLOUT', 0))}**")
-
-            # --- TOTALIZADOR ---
-            st.divider()
-            total_final = f_rs(r.get('TOTAL A RECEBER', 0))
-            st.success(f"🏆 TOTAL: {total_final}")
-            
-            # Notas
-            obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
-            if obs not in ['nan', '0', '', 'None']:
-                with st.expander("📝 Notas", expanded=False):
-                    st.write(obs)
-        else:
-            st.error("Matrícula não encontrada.")
+                    st.write(f"Medalha: **{med}
