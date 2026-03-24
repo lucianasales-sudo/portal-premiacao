@@ -34,8 +34,17 @@ def load_data():
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Mapeamento para nomes curtos (Evita SyntaxError)
+        # Identifica colunas de Matrícula
+        c1 = [c for c in d1.columns if 'MATRIC' in c][0]
+        c2 = [c for c in d2.columns if 'MATRIC' in c][0]
+        
+        # FORÇA CONVERSÃO PARA TEXTO LIMPO (Crucial para a busca funcionar)
+        d1[c1] = d1[c1].astype(str).str.strip()
+        d2[c2] = d2[c2].astype(str).str.strip()
+
+        # Mapeamento para nomes curtos
         d1 = d1.rename(columns={
+            c1: 'ID_MATRICULA',
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'AD_P',
             'PREMIAÇÃO ADERENCIA ROTEIRO': 'AD_V',
             'MEDALHA LOJA DO CORAÇÃO': 'LC_M',
@@ -45,55 +54,13 @@ def load_data():
             'AING SELLOUT %': 'SO_A',
             'PREMIAÇÃO SELLOUT': 'SO_V',
             'TOTAL A RECEBER': 'TOTAL',
-            'PONTO EXTRA': 'PT_E',      # Novo
-            'PONTO NATURAL': 'PT_N',    # Novo
-            'RUPTURA': 'RUPT',          # Novo
-            'MPDV': 'MPDV'              # Novo
+            'PONTO EXTRA': 'PT_E',
+            'PONTO NATURAL': 'PT_N',
+            'RUPTURA': 'RUPT',
+            'MPDV': 'MPDV'
         })
+        d2 = d2.rename(columns={c2: 'ID_MATRICULA'})
 
-        c1 = 'MATRÍCULA' if 'MATRÍCULA' in d1.columns else d1.columns[0]
-        c2 = 'MATRÍCULA' if 'MATRÍCULA' in d2.columns else d2.columns[0]
-        
-        d1[c1] = d1[c1].astype(str).str.strip()
-        d2[c2] = d2[c2].astype(str).str.strip()
-
-        return pd.merge(d1, d2, left_on=c1, right_on=c2, how='left')
-    except: return None
-
-df = load_data()
-
-if df is not None:
-    st.header("🏆 PAINEL PREMIAÇÃO")
-    st.divider()
-
-    c_mat = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-    
-    col_l, col_m = st.columns(2)
-    with col_l:
-        acesso = st.text_input("MATRÍCULA:", placeholder="Ex: 1-49174")
-    
-    if acesso:
-        u_df = df[df[c_mat] == acesso.strip()]
-        if not u_df.empty:
-            nome_c = [c for c in df.columns if 'NOME' in c][0]
-            p_nome = str(u_df.iloc[0][nome_c]).split()[0]
-            st.subheader(f"Olá, {p_nome}! 👋")
-            
-            with col_m:
-                u_df['MÊS'] = u_df['MÊS'].astype(str).str.upper()
-                m_sel = st.selectbox("MÊS:", u_df['MÊS'].unique())
-            
-            r = u_df[u_df['MÊS'] == m_sel].iloc[0]
-            
-            st.write("### Indicadores")
-            c1, c2, c3 = st.columns(3)
-            
-            with c1:
-                with st.container(border=True):
-                    st.write("🎯 **ADERÊNCIA**")
-                    st.write(f"Perf: **{f_pc(r.get('AD_P',0))}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('AD_V',0))}**")
-            
-            with c2:
-                with st.container(border=True):
-                    st
+        # Junta as tabelas
+        return pd.merge(d1, d2, on='ID_MATRICULA', how='left')
+    except Exception as e
