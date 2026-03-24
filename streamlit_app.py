@@ -20,31 +20,40 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return "0%"
 
-# 2. Carregamento de Dados (2 Arquivos)
+# 2. Carregamento de Dados
 @st.cache_data
 def load_data():
     try:
-        # Base Principal
+        # Carrega bases
         try: d1 = pd.read_csv("dados.csv", encoding='utf-8')
         except: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         d1.columns = [c.strip().upper() for c in d1.columns]
 
-        # Base Secundária
         try: d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Mapeamento para nomes curtos (Evita SyntaxError)
+        # Renomeia colunas para nomes curtíssimos (evita quebra de linha)
         d1 = d1.rename(columns={
-            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'AD_P',
-            'PREMIAÇÃO ADERENCIA ROTEIRO': 'AD_V',
-            'MEDALHA LOJA DO CORAÇÃO': 'LC_M',
-            'PREMIAÇÃO MEDALHA LC': 'LC_V',
-            'META SELLOUT': 'SO_M',
-            'REAL SELLOUT': 'SO_R',
-            'AING SELLOUT %': 'SO_A',
-            'PREMIAÇÃO SELLOUT': 'SO_V',
-            'TOTAL A RECEBER': 'TOTAL'
+            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1',
+            'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
+            'MEDALHA LOJA DO CORAÇÃO': 'L1',
+            'PREMIAÇÃO MEDALHA LC': 'L2',
+            'META SELLOUT': 'S1',
+            'REAL SELLOUT': 'S2',
+            'AING SELLOUT %': 'S3',
+            'PREMIAÇÃO SELLOUT': 'S4',
+            'TOTAL A RECEBER': 'TOT'
         })
 
-        c1 = 'MATRÍCULA' if '
+        # Define chave de união
+        c_k = 'MATRÍCULA' if 'MATRÍCULA' in d1.columns else d1.columns[0]
+        d1[c_k] = d1[c_k].astype(str).str.strip()
+        d2[c_k] = d2[c_k].astype(str).str.strip()
+
+        return pd.merge(d1, d2, on=c_k, how='left')
+    except: return None
+
+df = load_data()
+
+if df is not
