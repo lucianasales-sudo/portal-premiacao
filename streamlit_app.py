@@ -4,14 +4,14 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide")
 
-# CSS para o aspecto de sistema profissional
+# CSS para o aspecto de sistema profissional (Enterprise)
 st.markdown("""
     <style>
     .main { background-color: #f8fafc; }
     .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     h1, h2, h3 { color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .card-header { font-weight: bold; color: #334155; border-bottom: 2px solid #e2e8f0; margin-bottom: 10px; padding-bottom: 5px; }
-    .stSuccess { border-radius: 10px; }
+    .stSuccess { border-radius: 10px; padding: 20px; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -32,21 +32,28 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return str(v)
 
-# 2. Carregamento de Dados
+# 2. Carregamento de Dados (Foco exclusivo em dados.csv)
 @st.cache_data
 def load():
     try:
-        try: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
-        except: d1 = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
-        try: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
-        except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=',', encoding='utf-8')
+        # Carregamento único
+        try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
+        
+        df.columns = [c.strip().upper() for c in df.columns]
 
-        d1.columns = [c.strip().upper() for c in d1.columns]
-        d2.columns = [c.strip().upper() for c in d2.columns]
+        # Busca inteligente de colunas críticas para evitar erros de acento
+        c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
+        if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
+        
+        c_obs = [c for c in df.columns if 'OBSERV' in c]
+        if c_obs: df = df.rename(columns={c_obs[0]: 'OBS_GERAIS'})
 
-        c_nota = [c for c in d1.columns if 'NOTA' in c and 'CORA' in c]
-        if c_nota: d1 = d1.rename(columns={c_nota[0]: 'L0'})
+        c_mat = [c for c in df.columns if 'MATRIC' in c]
+        k_mat = c_mat[0] if c_mat else df.columns[0]
+        df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
 
+        # Mapeamento de Indicadores
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -55,19 +62,9 @@ def load():
             'TOTAL A RECEBER': 'TOT', 'PONTO EXTRA': 'P1',
             'PONTO NATURAL': 'P2', 'RUPTURA': 'P3', 'MPDV': 'P4'
         }
-        d1 = d1.rename(columns=m)
-
-        c_m1 = [c for c in d1.columns if 'MATRIC' in c]
-        k1 = c_m1[0] if c_m1 else d1.columns[0]
-        c_m2 = [c for c in d2.columns if 'MATRIC' in c]
-        k2 = c_m2[0] if c_m2 else d2.columns[0]
-        
-        d1['ID'] = d1[k1].astype(str).str.strip()
-        d2['ID'] = d2[k2].astype(str).str.strip()
-        
-        return pd.merge(d1, d2, on='ID', how='left')
+        return df.rename(columns=m)
     except Exception as e:
-        st.error(f"Erro de dados: {e}")
+        st.error(f"Erro ao carregar o arquivo dados.csv: {e}")
         return None
 
 df = load()
@@ -77,21 +74,24 @@ st.title("🏆 Portal de Performance")
 st.markdown("---")
 
 if df is not None:
+    # Área de Busca
     c_busca1, c_busca2 = st.columns([1, 2])
     with c_busca1:
-        acesso = st.text_input("Sua Matrícula:", placeholder="Ex: 1-49036")
+        acesso = st.text_input("Digite sua Matrícula:", placeholder="Ex: 1-49036")
     
     if acesso:
         u_id = acesso.strip()
-        u_df = df[df['ID'] == u_id]
+        u_df = df[df['ID_BUSCA'] == u_id]
         
         if not u_df.empty:
+            # Saudação pelo primeiro nome
             n_cols = [c for c in df.columns if 'NOME' in c]
             nome_f = str(u_df.iloc[0].get(n_cols[0], 'Colaborador'))
             st.subheader(f"Olá, {nome_f.split()[0]}! 👋")
             
+            # Seletor de Mês (com busca inteligente de coluna)
             c_mes_col = [c for c in u_df.columns if 'M' in c and 'S' in c][0]
-            m_sel = st.selectbox("Competência/Mês:", u_df[c_mes_col].unique())
+            m_sel = st.selectbox("Selecione o Mês:", u_df[c_mes_col].unique())
             r = u_df[u_df[c_mes_col] == m_sel].iloc[0]
             
             st.write("")
@@ -126,13 +126,14 @@ if df is not None:
             st.write("")
             st.success(f"### **VALOR TOTAL A RECEBER: {f_rs(r.get('TOT',0))}**")
             
-            # --- BLOCO DE OBSERVAÇÕES GERAIS (NOVO) ---
-            obs = str(r.get('OBSERVAÇÕES GERAIS','')).strip()
+            # --- BLOCO DE OBSERVAÇÕES GERAIS ---
+            obs = str(r.get('OBS_GERAIS','')).strip()
             if obs not in ['nan','0','','None']:
+                st.write("")
                 with st.container(border=True):
                     st.markdown('<p class="card-header">📝 OBSERVAÇÕES GERAIS</p>', unsafe_allow_html=True)
-                    st.info(obs)
+                    st.markdown(f'<div style="color: #475569; line-height: 1.6;">{obs}</div>', unsafe_allow_html=True)
         else:
-            st.warning("Matrícula não localizada.")
+            st.warning("Matrícula não localizada no banco de dados.")
 else:
-    st.info("Aguardando base de dados...")
+    st.info("Aguardando carregamento da base de dados...")
