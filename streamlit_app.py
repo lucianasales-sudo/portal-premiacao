@@ -91,7 +91,7 @@ if df is not None:
             
             with c1:
                 with st.container(border=True):
-                    st.write("**🎯 ADERÊNCIA**")
+                    st.write("**🎯 ADERÊNCIA ROTEIRO**")
                     st.write(f"Performance **{f_pc(r.get('A1',0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
             
