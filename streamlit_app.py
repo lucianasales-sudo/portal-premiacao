@@ -109,11 +109,16 @@ if df is not None:
                 with st.container(border=True):
                     st.write("**🏪 LOJA DO CORAÇÃO**")
                     st.write(f"Medalha: **{r.get('L1','-')}**")
-                    # Novos Campos que você pediu
-                    st.write(f"Ponto Extra: **{r.get('P1',0)}**")
-                    st.write(f"Ponto Natural: **{r.get('P2',0)}**")
+                    
+                    # Indicadores detalhados
+                    st.write(f"P. Extra: **{r.get('P1',0)}**")
+                    st.write(f"P. Natural: **{r.get('P2',0)}**")
                     st.write(f"Ruptura: **{r.get('P3',0)}**")
                     st.write(f"MPDV: **{r.get('P4',0)}**")
+                    
+                    # Nota aparece agora antes do prêmio
+                    st.write(f"Nota: **{r.get('L0', 0)}**")
+                    
                     st.write(f"Prêmio: **{f_rs(r.get('L2',0))}**")
             
             with c3:
