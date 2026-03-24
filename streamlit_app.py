@@ -92,15 +92,15 @@ if df is not None:
             with c1:
                 with st.container(border=True):
                     st.write("**🎯 ADERÊNCIA**")
-                    st.write(f"Perf: **{f_pc(r.get('A1',0))}**")
+                    st.write(f"Performance **{f_pc(r.get('A1',0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
             
             with c2:
                 with st.container(border=True):
                     st.write("**🏪 LOJA DO CORAÇÃO**")
                     st.write(f"Medalha: **{r.get('L1','-')}**")
-                    st.write(f"P. Extra: **{r.get('P1',0)}**")
-                    st.write(f"P. Natural: **{r.get('P2',0)}**")
+                    st.write(f"Ponto Extra: **{r.get('P1',0)}**")
+                    st.write(f"Ponto Natural: **{r.get('P2',0)}**")
                     st.write(f"Ruptura: **{r.get('P3',0)}**")
                     st.write(f"MPDV: **{r.get('P4',0)}**")
                     # Nota agora com busca inteligente
