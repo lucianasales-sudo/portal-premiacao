@@ -39,7 +39,6 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
 
-    /* CLASSE CORRETA PARA OS TÍTULOS DOS CARDS */
     .card-title {
         color: #0f172a !important;
         font-size: 14px !important;
@@ -86,7 +85,6 @@ st.markdown("""
         line-height: 1.6;
     }
 
-    /* Limpeza de elementos padrão */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -110,26 +108,20 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return str(v)
 
-# 2. Carregamento de Dados (Foco em dados.csv)
+# 2. Carregamento de Dados
 @st.cache_data
 def load():
     try:
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
-        
         df.columns = [c.strip().upper() for c in df.columns]
-
-        # Mapeamentos Inteligentes
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
-        
         c_obs = [c for c in df.columns if 'OBSERV' in c]
         if c_obs: df = df.rename(columns={c_obs[0]: 'OBS_GERAIS'})
-
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
-
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -140,13 +132,14 @@ def load():
         }
         return df.rename(columns=m)
     except Exception as e:
-        st.error(f"Erro ao carregar ficheiro: {e}")
+        st.error(f"Erro: {e}")
         return None
 
 df = load()
 
 # 3. Interface Visual
-st.markdown('<p class="main-title">Portal de Premiação</p>', unsafe_allow_html=True)
+# ADICIONADO ÍCONE DE TAÇA AQUI:
+st.markdown('<p class="main-title">🏆 Portal de Premiação</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Acompanhe os seus indicadores de performance</p>', unsafe_allow_html=True)
 
 if df is not None:
@@ -169,7 +162,6 @@ if df is not None:
             
             st.write("")
 
-            # --- LINHA DE CARDS ---
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -180,7 +172,6 @@ if df is not None:
             
             with col2:
                 with st.container():
-                    # FIX: Mudado de card-header para card-title
                     st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-highlight">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">P. Extra / Natural</span><span class="metric-value">{r.get("P1",0)} / {r.get("P2",0)}</span></div>', unsafe_allow_html=True)
@@ -196,7 +187,6 @@ if df is not None:
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Atingimento %</span><span class="metric-highlight">{f_pc(r.get("S3",0))}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
 
-            # --- TOTALIZADOR ---
             st.markdown(f"""
                 <div class="total-receber">
                     <span style="font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px;">Valor Total a Receber</span><br>
@@ -204,7 +194,6 @@ if df is not None:
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- BLOCO DE OBSERVAÇÕES ---
             texto_obs = str(r.get('OBS_GERAIS','')).strip()
             if texto_obs not in ['nan', '0', '', 'None']:
                 st.write("")
