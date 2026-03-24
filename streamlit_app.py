@@ -21,36 +21,46 @@ def f_pc(v):
 @st.cache_data
 def load():
     try:
-        # Carregamento resiliente
-        try: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
-        except: d1 = pd.read_csv("dados.csv", encoding='utf-8')
-        try: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
-        except: d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
+        # Carregamento fragmentado para evitar corte de linha
+        try: 
+            d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        except: 
+            d1 = pd.read_csv("dados.csv", encoding='utf-8')
+        
+        try: 
+            d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
+        except: 
+            d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
 
         d1.columns = [c.strip().upper() for c in d1.columns]
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Mapeamento (Abreviado para evitar quebra de linha)
-        m = {
-            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1',
-            'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
-            'MEDALHA LOJA DO CORAÇÃO': 'L1',
-            'PREMIAÇÃO MEDALHA LC': 'L2',
-            'META SELLOUT': 'S1', 'REAL SELLOUT': 'S2',
-            'AING SELLOUT %': 'S3', 'PREMIAÇÃO SELLOUT': 'S4',
-            'TOTAL A RECEBER': 'TOT',
-            'PONTO EXTRA': 'P1', 'PONTO NATURAL': 'P2',
-            'RUPTURA': 'P3', 'MPDV': 'P4'
-        }
+        # Mapeamento (Cada item em uma linha para seguranca)
+        m = {}
+        m['PRODUTIVIDADE ADERENCIA ROTEIRO'] = 'A1'
+        m['PREMIAÇÃO ADERENCIA ROTEIRO'] = 'A2'
+        m['MEDALHA LOJA DO CORAÇÃO'] = 'L1'
+        m['PREMIAÇÃO MEDALHA LC'] = 'L2'
+        m['AING SELLOUT %'] = 'S3'
+        m['PREMIAÇÃO SELLOUT'] = 'S4'
+        m['TOTAL A RECEBER'] = 'TOT'
+        m['PONTO EXTRA'] = 'P1'
+        m['PONTO NATURAL'] = 'P2'
+        m['RUPTURA'] = 'P3'
+        m['MPDV'] = 'P4'
+        
         d1 = d1.rename(columns=m)
 
         # Chaves de Matricula
         k1 = [c for c in d1.columns if 'MATRIC' in c][0]
         k2 = [c for c in d2.columns if 'MATRIC' in c][0]
         
-        # Limpeza de ID (Sintaxe encurtada)
-        d1['ID'] = d1[k1].astype(str).str.strip()
-        d2['ID'] = d2[k2].astype(str).str.strip()
+        # Limpeza em etapas separadas (Evita erro na linha 60)
+        v1 = d1[k1].astype(str)
+        d1['ID'] = v1.str.strip()
+        
+        v2 = d2[k2].astype(str)
+        d2['ID'] = v2.str.strip()
         
         return pd.merge(d1, d2, on='ID', how='left')
     except Exception as e:
@@ -90,6 +100,7 @@ if df is not None:
                 with st.container(border=True):
                     st.write("**🏪 LOJA DO CORAÇÃO**")
                     st.write(f"Medalha: **{r.get('L1','-')}**")
+                    # Novos indicadores
                     st.write(f"P.Extra: **{f_pc(r.get('P1',0))}**")
                     st.write(f"P.Natural: **{f_pc(r.get('P2',0))}**")
                     st.write(f"Ruptura: **{f_pc(r.get('P3',0))}**")
