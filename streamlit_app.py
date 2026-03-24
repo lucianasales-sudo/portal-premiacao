@@ -105,7 +105,7 @@ if df is not None:
                 with st.container(border=True):
                     st.markdown('<p class="card-header">🏪 LOJA DO CORAÇÃO</p>', unsafe_allow_html=True)
                     st.write(f"Medalha: **{r.get('L1','-')}**")
-                    st.write(f"P. Extra: **{r.get('P1',0)}** | P. Natural: **{r.get('P2',0)}**")
+                    st.write(f"Ponto Extra: **{r.get('P1',0)}** | Ponto Natural: **{r.get('P2',0)}**")
                     st.write(f"Ruptura: **{r.get('P3',0)}** | MPDV: **{r.get('P4',0)}**")
                     st.write(f"Nota: **{r.get('L0', 0)}**")
                     st.write(f"Prêmio: **{f_rs(r.get('L2',0))}**")
