@@ -96,8 +96,7 @@ if df is not None:
                     st.write("🏪 **LOJA DO CORAÇÃO**")
                     st.write(f"Medalha: **{r.get('LC_M','-')}**")
                     # Dado da 2ª planilha (ajuste o nome da coluna se necessário)
-                    st.write(f"Status: **{r.get('STATUS','Sem info')}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('LC_V',0))}**")
+                   st.write(f"Prêmio: **{f_rs(r.get('LC_V',0))}**")
             
             with c3:
                 with st.container(border=True):
