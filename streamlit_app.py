@@ -69,50 +69,50 @@ def load():
 
 df = load()
 
-# 3. Interface
-if df is not None:
-    st.divider()
-    acesso = st.text_input("MATRÍCULA:", placeholder="Digite...")
-    
-    if acesso:
-        u_id = acesso.strip()
-        u_df = df[df['ID'] == u_id]
-        
-        if not u_df.empty:
-            r_ini = u_df.iloc[0]
-            n_col = [c for c in df.columns if 'NOME' in c][0]
-            nome = str(r_ini.get(n_col, 'User')).split()[0]
-            st.subheader(f"Olá, {nome}! 👋")
-            
-            m_sel = st.selectbox("MÊS:", u_df['MÊS'].unique())
-            r = u_df[u_df['MÊS'] == m_sel].iloc[0]
-            
-            st.write("### Indicadores")
-            c1, c2, c3 = st.columns(3)
-            
-            with c1:
-                with st.container(border=True):
-                    st.write("**🎯 ADERÊNCIA**")
-                    st.write(f"Perf: **{f_pc(r.get('A1',0))}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
-            
-            with c2:
-                with st.container(border=True):
-                    st.write("**🏪 LOJA DO CORAÇÃO**")
-                    st.write(f"Medalha: **{r.get('L1','-')}**")
-                    # Novos indicadores
-                    st.write(f"P.Extra: **{f_pc(r.get('P1',0))}**")
-                    st.write(f"P.Natural: **{f_pc(r.get('P2',0))}**")
-                    st.write(f"Ruptura: **{f_pc(r.get('P3',0))}**")
-                    st.write(f"MPDV: **{f_pc(r.get('P4',0))}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('L2',0))}**")
-            
-            with c3:
-                with st.container(border=True):
-                    st.write("**📈 SELLOUT**")
-                    st.write(f"Ating: **{f_pc(r.get('S3',0))}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('S4',0))}**")
+# ... (mantenha o topo do código igual)
 
+# 2. Dados
+@st.cache_data
+def load():
+    try:
+        # Carregamento
+        try: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
+        except: d1 = pd.read_csv("dados.csv", encoding='utf-8')
+        
+        try: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
+        except: d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
+
+        d1.columns = [c.strip().upper() for c in d1.columns]
+        d2.columns = [c.strip().upper() for c in d2.columns]
+
+        # Mapeamento de Indicadores
+        m = {
+            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
+            'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
+            'AING SELLOUT %': 'S3', 'PREMIAÇÃO SELLOUT': 'S4',
+            'TOTAL A RECEBER': 'TOT', 'PONTO EXTRA': 'P1',
+            'PONTO NATURAL': 'P2', 'RUPTURA': 'P3', 'MPDV': 'P4'
+        }
+        d1 = d1.rename(columns=m)
+
+        # --- BUSCA SEGURA DE MATRÍCULA (RESOLVE O INDEX ERROR) ---
+        # Tenta achar 'MATRIC', se não achar, usa a primeira coluna da planilha
+        c_m1 = [c for c in d1.columns if 'MATRIC' in c]
+        k1 = c_m1[0] if c_m1 else d1.columns[0]
+        
+        c_m2 = [c for c in d2.columns if 'MATRIC' in c]
+        k2 = c_m2[0] if c_m2 else d2.columns[0]
+        
+        # Limpeza
+        d1['ID'] = d1[k1].astype(str).str.strip()
+        d2['ID'] = d2[k2].astype(str).str.strip()
+        
+        return pd.merge(d1, d2, on='ID', how='left')
+    except Exception as e:
+        st.error(f"Erro ao processar colunas: {e}")
+        return None
+
+# ... (resto do código igual)
             st.divider()
             st.success(f"🏆 TOTAL: {f_rs(r.get('TOT',0))}")
         else:
