@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configurações de Design
+# 1. Configurações
 st.set_page_config(page_title="PAINEL PREMIAÇÃO", layout="wide", page_icon="☕")
 
-# Funções de Formatação Seguras
+# Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','nan']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -12,8 +12,7 @@ def f_rs(v):
 
 def f_nm(v):
     if pd.isna(v) or str(v) in ['0','-','nan']: return "0"
-    l = str(v).replace('R','').replace('$','').strip()
-    return l
+    return str(v).replace('R','').replace('$','').strip()
 
 def f_pc(v):
     try:
@@ -25,25 +24,36 @@ def f_pc(v):
 @st.cache_data
 def load_data():
     try:
-        # Carrega Base de Prêmios
+        # Base Principal
         try: d1 = pd.read_csv("dados.csv", encoding='utf-8')
         except: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         d1.columns = [c.strip().upper() for c in d1.columns]
 
-        # Carrega Base de Abertura LC
+        # Base Secundária
         try: d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Chaves de união
+        # Mapeamento para nomes curtos (Evita SyntaxError)
+        d1 = d1.rename(columns={
+            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'AD_P',
+            'PREMIAÇÃO ADERENCIA ROTEIRO': 'AD_V',
+            'MEDALHA LOJA DO CORAÇÃO': 'LC_M',
+            'PREMIAÇÃO MEDALHA LC': 'LC_V',
+            'META SELLOUT': 'SO_M',
+            'REAL SELLOUT': 'SO_R',
+            'AING SELLOUT %': 'SO_A',
+            'PREMIAÇÃO SELLOUT': 'SO_V',
+            'TOTAL A RECEBER': 'TOTAL'
+        })
+
         c1 = 'MATRÍCULA' if 'MATRÍCULA' in d1.columns else d1.columns[0]
         c2 = 'MATRÍCULA' if 'MATRÍCULA' in d2.columns else d2.columns[0]
         
         d1[c1] = d1[c1].astype(str).str.strip()
         d2[c2] = d2[c2].astype(str).str.strip()
 
-        # Une as planilhas
-        return pd.merge(d1, d2, left_on=c1, right_on=c2, how='left', suffixes=('','_LC'))
+        return pd.merge(d1, d2, left_on=c1, right_on=c2, how='left')
     except: return None
 
 df = load_data()
@@ -71,20 +81,38 @@ if df is not None:
             
             r = u_df[u_df['MÊS'] == m_sel].iloc[0]
             
-            # --- VARIÁVEIS CURTAS (Blindagem contra SyntaxError) ---
-            val_ad_p = f_pc(r.get('PRODUTIVIDADE ADERENCIA ROTEIRO', 0))
-            val_ad_v = f_rs(r.get('PREMIAÇÃO ADERENCIA ROTEIRO', 0))
+            # --- ÁREA DE INDICADORES (Nomes curtos = Linhas curtas) ---
+            st.write("### Indicadores")
+            c1, c2, c3 = st.columns(3)
             
-            val_lc_m = str(r.get('MEDALHA LOJA DO CORAÇÃO', '-'))
-            val_lc_v = f_rs(r.get('PREMIAÇÃO MEDALHA LC', 0))
+            with c1:
+                with st.container(border=True):
+                    st.write("🎯 **ADERÊNCIA**")
+                    st.write(f"Perf: **{f_pc(r.get('AD_P',0))}**")
+                    st.write(f"Prêmio: **{f_rs(r.get('AD_V',0))}**")
             
-            # Exemplo de dado vindo da SEGUNDA PLANILHA (BASE ABERTURA LC)
-            # Substitua 'COLUNA_DA_BASE_LC' pelo nome real da coluna que quer mostrar
-            extra_lc = str(r.get('STATUS', 'Sem info')) 
+            with c2:
+                with st.container(border=True):
+                    st.write("🏪 **LOJA DO CORAÇÃO**")
+                    st.write(f"Medalha: **{r.get('LC_M','-')}**")
+                    # Dado da 2ª planilha (ajuste o nome da coluna se necessário)
+                    st.write(f"Status: **{r.get('STATUS','Sem info')}**")
+                    st.write(f"Prêmio: **{f_rs(r.get('LC_V',0))}**")
+            
+            with c3:
+                with st.container(border=True):
+                    st.write("📈 **SELLOUT**")
+                    st.write(f"Meta: {f_nm(r.get('SO_M',0))} | Real: {f_nm(r.get('SO_R',0))}")
+                    st.write(f"Ating: **{f_pc(r.get('SO_A',0))}**")
+                    st.write(f"Prêmio: **{f_rs(r.get('SO_V',0))}**")
 
-            val_so_m = f_nm(r.get('META SELLOUT', 0))
-            val_so_r = f_nm(r.get('REAL SELLOUT', 0))
-            val_so_a = f_pc(r.get('AING SELLOUT %', 0))
-            val_so_v = f_rs(r.get('PREMIAÇÃO SELLOUT', 0))
+            st.divider()
+            val_tt = f_rs(r.get('TOTAL', 0))
+            st.success(f"🏆 TOTAL: {val_tt}")
             
-            val_total = f_rs(r.get('TOTAL A
+            obs = str(r.get('OBSERVAÇÕES GERAIS', '')).strip()
+            if obs not in ['nan', '0', '', 'None']:
+                with st.expander("📝 Notas", expanded=False):
+                    st.write(obs)
+        else:
+            st.error("Matrícula não encontrada.")
