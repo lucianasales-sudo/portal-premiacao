@@ -115,7 +115,7 @@ if df is not None:
                     st.markdown('<p class="card-header">📈 SELLOUT</p>', unsafe_allow_html=True)
                     st.write(f"Meta: **{f_nm(r.get('S1',0))}**")
                     st.write(f"Real: **{f_nm(r.get('S2',0))}**")
-                    st.write(f"Ating: **{f_pc(r.get('S3',0))}**")
+                    st.write(f"Ating %: **{f_pc(r.get('S3',0))}**")
                     st.write(f"Prêmio: **{f_rs(r.get('S4',0))}**")
 
             st.write("")
