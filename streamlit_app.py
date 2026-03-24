@@ -39,15 +39,17 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
 
+    /* CLASSE CORRETA PARA OS TÍTULOS DOS CARDS */
     .card-title {
-        color: #0f172a;
-        font-size: 14px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        color: #0f172a !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
         border-left: 4px solid #8B4513; /* Tom Café */
         padding-left: 12px;
         margin-bottom: 20px;
+        display: block;
     }
 
     /* Linhas de Métricas */
@@ -108,7 +110,7 @@ def f_pc(v):
         return f"{int(n)}%"
     except: return str(v)
 
-# 2. Carregamento de Dados (Apenas dados.csv)
+# 2. Carregamento de Dados (Foco em dados.csv)
 @st.cache_data
 def load():
     try:
@@ -117,7 +119,7 @@ def load():
         
         df.columns = [c.strip().upper() for c in df.columns]
 
-        # Mapeamentos Inteligentes (Nota e Observações)
+        # Mapeamentos Inteligentes
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
         
@@ -148,7 +150,6 @@ st.markdown('<p class="main-title">Portal de Premiação</p>', unsafe_allow_html
 st.markdown('<p class="sub-header">Acompanhe os seus indicadores de performance</p>', unsafe_allow_html=True)
 
 if df is not None:
-    # Busca
     c_busca, _ = st.columns([1, 2])
     with c_busca:
         acesso = st.text_input("Introduza a sua Matrícula:", placeholder="Ex: 1-49036")
@@ -158,12 +159,10 @@ if df is not None:
         u_df = df[df['ID_BUSCA'] == u_id]
         
         if not u_df.empty:
-            # Saudação
             n_cols = [c for c in df.columns if 'NOME' in c]
             nome_f = str(u_df.iloc[0].get(n_cols[0], 'Colaborador'))
             st.markdown(f"### Olá, **{nome_f.split()[0]}**! 👋")
             
-            # Seletor de Mês
             c_mes = [c for c in u_df.columns if 'M' in c and 'S' in c][0]
             m_sel = st.selectbox("Selecione o Ciclo:", u_df[c_mes].unique())
             r = u_df[u_df[c_mes] == m_sel].iloc[0]
@@ -177,16 +176,17 @@ if df is not None:
                 with st.container():
                     st.markdown('<p class="card-title">🎯 Aderência Roteiro</p>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Performance</span><span class="metric-highlight">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="metric-row"><span class="metric-label">Prémio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
             
             with col2:
                 with st.container():
-                    st.markdown('<p class="card-header">🏪 Loja do Coração</p>', unsafe_allow_html=True)
+                    # FIX: Mudado de card-header para card-title
+                    st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-highlight">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">P. Extra / Natural</span><span class="metric-value">{r.get("P1",0)} / {r.get("P2",0)}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Ruptura / MPDV</span><span class="metric-value">{r.get("P3",0)} / {r.get("P4",0)}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Nota</span><span class="metric-value">{r.get("L0", 0)}</span></div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="metric-row"><span class="metric-label">Prémio</span><span class="metric-value">{f_rs(r.get("L2",0))}</span></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("L2",0))}</span></div>', unsafe_allow_html=True)
             
             with col3:
                 with st.container():
@@ -194,7 +194,7 @@ if df is not None:
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Meta</span><span class="metric-value">{f_nm(r.get("S1",0))}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Real</span><span class="metric-value">{f_nm(r.get("S2",0))}</span></div>', unsafe_allow_html=True)
                     st.markdown(f'<div class="metric-row"><span class="metric-label">Atingimento %</span><span class="metric-highlight">{f_pc(r.get("S3",0))}</span></div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="metric-row"><span class="metric-label">Prémio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
 
             # --- TOTALIZADOR ---
             st.markdown(f"""
@@ -204,7 +204,7 @@ if df is not None:
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- BLOCO DE OBSERVAÇÕES (FORÇADO) ---
+            # --- BLOCO DE OBSERVAÇÕES ---
             texto_obs = str(r.get('OBS_GERAIS','')).strip()
             if texto_obs not in ['nan', '0', '', 'None']:
                 st.write("")
@@ -212,5 +212,3 @@ if df is not None:
                 st.markdown(f'<div class="obs-section">{texto_obs}</div>', unsafe_allow_html=True)
         else:
             st.warning("Matrícula não encontrada no sistema.")
-else:
-    st.info("Aguardando carregamento dos dados...")
