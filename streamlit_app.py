@@ -6,12 +6,12 @@ st.set_page_config(page_title="PAINEL PREMIAÇÃO", layout="wide", page_icon="�
 
 # Funções de Formatação
 def f_rs(v):
-    if pd.isna(v) or str(v).strip() in ['0','0,00','-','nan']: return "R$ 0,00"
+    if pd.isna(v) or str(v).strip() in ['0','0,00','-']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
     return f"R$ {l}"
 
 def f_nm(v):
-    if pd.isna(v) or str(v) in ['0','-','nan']: return "0"
+    if pd.isna(v) or str(v) in ['0','-']: return "0"
     return str(v).replace('R','').replace('$','').strip()
 
 def f_pc(v):
@@ -24,43 +24,49 @@ def f_pc(v):
 @st.cache_data
 def load_data():
     try:
-        # Base Principal
         try: d1 = pd.read_csv("dados.csv", encoding='utf-8')
         except: d1 = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         d1.columns = [c.strip().upper() for c in d1.columns]
 
-        # Base Secundária
         try: d2 = pd.read_csv("BASE ABERTURA LC.csv", encoding='utf-8')
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Identifica colunas de Matrícula
-        c1 = [c for c in d1.columns if 'MATRIC' in c][0]
-        c2 = [c for c in d2.columns if 'MATRIC' in c][0]
-        
-        # FORÇA CONVERSÃO PARA TEXTO LIMPO (Crucial para a busca funcionar)
-        d1[c1] = d1[c1].astype(str).str.strip()
-        d2[c2] = d2[c2].astype(str).str.strip()
-
-        # Mapeamento para nomes curtos
+        # Mapeamento Siglas
         d1 = d1.rename(columns={
-            c1: 'ID_MATRICULA',
-            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'AD_P',
-            'PREMIAÇÃO ADERENCIA ROTEIRO': 'AD_V',
-            'MEDALHA LOJA DO CORAÇÃO': 'LC_M',
-            'PREMIAÇÃO MEDALHA LC': 'LC_V',
-            'META SELLOUT': 'SO_M',
-            'REAL SELLOUT': 'SO_R',
-            'AING SELLOUT %': 'SO_A',
-            'PREMIAÇÃO SELLOUT': 'SO_V',
-            'TOTAL A RECEBER': 'TOTAL',
-            'PONTO EXTRA': 'PT_E',
-            'PONTO NATURAL': 'PT_N',
-            'RUPTURA': 'RUPT',
-            'MPDV': 'MPDV'
+            'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1',
+            'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
+            'MEDALHA LOJA DO CORAÇÃO': 'L1',
+            'PREMIAÇÃO MEDALHA LC': 'L2',
+            'META SELLOUT': 'S1',
+            'REAL SELLOUT': 'S2',
+            'AING SELLOUT %': 'S3',
+            'PREMIAÇÃO SELLOUT': 'S4',
+            'TOTAL A RECEBER': 'TOT',
+            'PONTO EXTRA': 'P1',
+            'PONTO NATURAL': 'P2',
+            'RUPTURA': 'P3',
+            'MPDV': 'P4'
         })
-        d2 = d2.rename(columns={c2: 'ID_MATRICULA'})
+        
+        c_k = [c for c in d1.columns if 'MATRIC' in c][0]
+        d1 = d1.rename(columns={c_k: 'ID'})
+        
+        c_k2 = [c for c in d2.columns if 'MATRIC' in c][0]
+        d2 = d2.rename(columns={c_k2: 'ID'})
+        
+        d1.ID = d1.ID.astype(str).str.strip()
+        d2.ID = d2.ID.astype(str).str.strip()
+        
+        return pd.merge(d1, d2, on='ID', how='left')
+    except Exception as e: # Corrigido: adicionado os dois pontos aqui
+        st.error(f"Erro: {e}")
+        return None
 
-        # Junta as tabelas
-        return pd.merge(d1, d2, on='ID_MATRICULA', how='left')
-    except Exception as e
+df = load_data()
+
+if df is not None:
+    st.header("🏆 PAINEL PREMIAÇÃO")
+    st.divider()
+
+    acesso = st.text_input("MATRÍCULA:", placeholder="Ex: 1-4
