@@ -32,7 +32,7 @@ def load():
         except: d2 = pd.read_csv("BASE ABERTURA LC.csv", sep=';', encoding='latin-1')
         d2.columns = [c.strip().upper() for c in d2.columns]
 
-        # Siglas curtas
+        # Siglas curtas para evitar quebra de linha
         d1 = d1.rename(columns={
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1',
             'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
@@ -45,53 +45,25 @@ def load():
             'TOTAL A RECEBER': 'TOT'
         })
         k = 'MATRÍCULA' if 'MATRÍCULA' in d1.columns else d1.columns[0]
-        d1[k] = d1[k].astype(str).str.strip()
-        d2[k] = d2[k].astype(str).str.strip()
+        d1[k], d2[k] = d1[k].astype(str).str.strip(), d2[k].astype(str).str.strip()
         return pd.merge(d1, d2, on=k, how='left')
     except: return None
 
 df = load()
 
-# Bloco Principal
+# 3. Interface
 if df is not None:
     st.header("🏆 PAINEL PREMIAÇÃO")
     st.divider()
     
-    # Busca de Matrícula
     c_l, c_m = st.columns(2)
     with c_l:
-        u_in = st.text_input("MATRÍCULA:", placeholder="Ex: 1-49174")
+        u_in = st.text_input("MATRÍCULA:", placeholder="Digite...")
     
     if u_in:
-        k_col = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
-        u_df = df[df[k_col] == u_in.strip()]
+        k_c = 'MATRÍCULA' if 'MATRÍCULA' in df.columns else df.columns[0]
+        u_df = df[df[k_c] == u_in.strip()]
         
         if not u_df.empty:
-            # Busca de Nome em etapas curtas (Anti-SyntaxError)
             cols = df.columns
-            n_list = [c for c in cols if 'NOME' in c]
-            n_col = n_list[0]
-            nome_u = str(u_df.iloc[0][n_col]).split()[0]
-            st.subheader(f"Olá, {nome_u}! 👋")
-            
-            with c_m:
-                u_df['MÊS'] = u_df['MÊS'].astype(str).str.upper()
-                m_list = u_df['MÊS'].unique()
-                m_s = st.selectbox("MÊS:", m_list)
-            
-            r = u_df[u_df['MÊS'] == m_s].iloc[0]
-            
-            # --- INDICADORES ---
-            st.write("### Indicadores")
-            c1, c2, c3 = st.columns(3)
-            
-            with c1:
-                with st.container(border=True):
-                    st.write("**🎯 ADERÊNCIA**")
-                    st.write(f"Perf: **{f_pc(r.get('A1',0))}**")
-                    st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
-            
-            with c2:
-                with st.container(border=True):
-                    st.write("**🏪 LOJA**")
-                    st.write(f"Medal
+            n_l = [c for c in cols
