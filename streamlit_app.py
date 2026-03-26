@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configuração de Estilo e Página
-st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
+st.set_page_config(page_title="PREMIAÇÃO", layout="wide", page_icon="☕")
 
 # CSS focado em Mobile First e Alinhamento Assimétrico
 st.markdown("""
