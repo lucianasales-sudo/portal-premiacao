@@ -9,17 +9,14 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
-    /* FUNDO E TEXTO GLOBAL */
     .stApp, div[data-testid="stAppViewContainer"], .main {
         background-color: #ffffff !important;
         color: #1e293b !important;
     }
 
-    /* INPUTS E PLACEHOLDER */
     input { color: #1e293b !important; background-color: #ffffff !important; }
     input::placeholder { color: #94a3b8 !important; opacity: 1; }
 
-    /* Header */
     .header-container {
         display: flex; flex-direction: column; align-items: center;
         text-align: center; padding: 5px 0px 15px 0px; width: 100%;
@@ -32,7 +29,6 @@ st.markdown("""
     }
     .sub-header { color: #64748b !important; font-size: 11px; margin-top: 2px; }
 
-    /* Cards */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
         background-color: #ffffff !important; border: 1px solid #f1f5f9 !important;
         border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 8px;
@@ -43,7 +39,6 @@ st.markdown("""
         padding-left: 10px; margin-bottom: 10px; display: block;
     }
 
-    /* Linhas de métricas detalhadas */
     .metric-row {
         display: flex; justify-content: space-between; align-items: center;
         padding: 4px 0; border-bottom: 1px solid #f8fafc;
@@ -51,14 +46,12 @@ st.markdown("""
     .metric-label { color: #64748b !important; font-size: 11px; }
     .metric-value { color: #1e293b !important; font-weight: 600; font-size: 12px; }
 
-    /* Botões Padronizados */
     .stButton>button, div[data-testid="stFormSubmitButton"]>button {
         width: 100% !important; border-radius: 8px !important; font-size: 12px !important;
         background-color: #f8fafc !important; color: #64748b !important;
         border: 1px solid #e2e8f0 !important; padding: 8px !important;
     }
 
-    /* Banner Total */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%) !important;
         color: #ffffff !important; padding: 18px; border-radius: 12px; text-align: center; margin-top: 15px;
@@ -92,14 +85,21 @@ def load():
     try:
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
+        
         df.columns = [c.strip().upper() for c in df.columns]
+
+        # BUSCA DINÂMICA PELA COLUNA DE OBSERVAÇÃO
+        col_obs = [c for c in df.columns if 'OBS' in c]
+        if col_obs:
+            df = df.rename(columns={col_obs[0]: 'OBS_GERAIS'})
+        
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
-        c_obs = [c for c in df.columns if 'OBSERV' in c]
-        if c_obs: df = df.rename(columns={c_obs[0]: 'OBS_GERAIS'})
+        
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
+
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -157,7 +157,7 @@ if df is not None:
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-value">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
 
-        # 2. Container LOJA DO CORAÇÃO (COM DETALHES)
+        # 2. Container LOJA DO CORAÇÃO
         with st.container():
             st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-value">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
@@ -166,7 +166,7 @@ if df is not None:
             st.markdown(f'<div class="metric-row"><span class="metric-label">Nota Final</span><span class="metric-value">{r.get("L0",0)}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("L2",0))}</span></div>', unsafe_allow_html=True)
 
-        # 3. Container SELLOUT (COM DETALHES)
+        # 3. Container SELLOUT
         with st.container():
             st.markdown('<p class="card-title">📈 Sellout</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Meta</span><span class="metric-value">{f_nm(r.get("S1",0))}</span></div>', unsafe_allow_html=True)
@@ -174,7 +174,7 @@ if df is not None:
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating. %</span><span class="metric-value">{f_pc(r.get("S3",0))}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
 
-        # TOTAL
+        # BANNER TOTAL
         st.markdown(f"""
             <div class="total-receber">
                 <span style="font-size:10px; text-transform:uppercase; opacity:0.8;">Total a Receber</span>
@@ -182,13 +182,16 @@ if df is not None:
             </div>
         """, unsafe_allow_html=True)
         
-        # 4. OBSERVAÇÕES GERAIS (REATIVADO)
-        obs = str(r.get('OBS_GERAIS','')).strip()
-        if obs not in ['nan', '0', '', 'None']:
+        # 4. OBSERVAÇÕES GERAIS (Correção de exibição)
+        # Convertemos para string e removemos espaços extras
+        raw_obs = str(r.get('OBS_GERAIS','')).strip()
+        
+        # Só exibe se NÃO for nulo, "nan", "0" ou vazio
+        if raw_obs.lower() not in ['nan', '0', '', 'none', 'null']:
             st.write("")
             st.markdown(f"""
-                <div style="background:#f8fafc; padding:15px; border-radius:10px; border-left:4px solid #8B4513; color:#1e293b; font-size:12px;">
-                    <b style="color:#0f172a;">📝 Notas da Liderança:</b><br>{obs}
+                <div style="background:#fdf6e3; padding:15px; border-radius:10px; border-left:4px solid #8B4513; color:#1e293b; font-size:12px;">
+                    <b style="color:#8B4513;">📝 Notas da Liderança:</b><br>{raw_obs}
                 </div>
             """, unsafe_allow_html=True)
         
