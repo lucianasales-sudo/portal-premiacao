@@ -4,81 +4,64 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS com Blindagem contra cortes laterais
+# CSS com Blindagem e Novos Estilos de Topo
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-    
     .stApp { background-color: #ffffff; font-family: 'Inter', sans-serif; }
 
-    /* Header com largura total e sem cortes */
     .header-container {
         display: flex; flex-direction: column; align-items: center;
-        text-align: center; 
-        padding: 5px 0px 20px 0px;
-        width: 100%;
-        margin: 0 auto;
+        text-align: center; padding: 5px 0px 20px 0px; width: 100%; margin: 0 auto;
     }
-    
     .logo-img { width: 50px; height: auto; margin-bottom: 8px; }
-    
-    /* TÍTULO SLIM - 15px e largura forçada */
     .main-title { 
-        color: #1e293b; 
-        font-size: 15px; 
-        font-weight: 800; 
-        margin: 0; 
-        text-transform: uppercase;
-        white-space: nowrap; 
-        letter-spacing: 0px;
-        width: 100vw; /* Ocupa a largura da janela */
-        display: flex;
-        justify-content: center;
+        color: #1e293b; font-size: 15px; font-weight: 800; margin: 0; 
+        text-transform: uppercase; white-space: nowrap; width: 100vw; 
+        display: flex; justify-content: center;
     }
-    
     .sub-header { color: #64748b; font-size: 11px; margin-top: 2px; }
 
-    /* Estilização dos Blocos (Cards) */
+    /* Novo Estilo: Resumo de Topo */
+    .summary-top {
+        background-color: #f8fafc; border-radius: 12px; padding: 15px;
+        text-align: center; margin: 10px 0 20px 0; border: 1px dashed #e2e8f0;
+    }
+    .summary-label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .summary-value { color: #8B4513; font-size: 24px; font-weight: 800; display: block; }
+
+    /* Cards Detalhados */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
         background-color: #ffffff; border: 1px solid #f1f5f9;
-        border-radius: 12px; padding: 14px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 8px;
+        border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 8px;
     }
-
     .card-title {
-        color: #0f172a !important; font-size: 11px !important;
-        font-weight: 700 !important; text-transform: uppercase !important;
-        border-left: 3px solid #8B4513; padding-left: 10px; margin-bottom: 10px; display: block;
+        color: #0f172a !important; font-size: 11px !important; font-weight: 700 !important;
+        text-transform: uppercase !important; border-left: 3px solid #8B4513;
+        padding-left: 10px; margin-bottom: 10px; display: block;
     }
-
-    .metric-row {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 5px 0; border-bottom: 1px solid #f8fafc;
-    }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f8fafc; }
     .metric-label { color: #64748b; font-size: 11px; }
     .metric-value { color: #1e293b; font-weight: 600; font-size: 12px; }
     .metric-highlight { color: #1e293b; font-weight: 800; font-size: 13px; }
 
+    /* Banner Final */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%);
-        color: white; padding: 15px; border-radius: 12px;
-        text-align: center; margin-top: 10px;
+        color: white; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;
     }
-    .total-label { font-size: 9px; opacity: 0.8; text-transform: uppercase; }
-    .total-value { font-size: 22px; font-weight: 800; display: block; }
+    .total-value-final { font-size: 22px; font-weight: 800; display: block; }
 
     .stButton>button { width: 100%; border-radius: 8px; font-size: 12px; }
-    
     #MainMenu, footer, header {visibility: hidden;}
     
-    /* Remove padding lateral padrão do Streamlit no mobile */
     @media (max-width: 640px) {
         .block-container { padding-left: 1rem !important; padding-right: 1rem !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# Funções de Formatação
+# Funções de Formatação (Mantidas)
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','R$ -']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -94,14 +77,12 @@ def f_pc(v):
         return f"{int(float(s))}%"
     except: return str(v)
 
-# 2. Carregamento de Dados
 @st.cache_data
 def load():
     try:
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
         df.columns = [c.strip().upper() for c in df.columns]
-        
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
         c_obs = [c for c in df.columns if 'OBSERV' in c]
@@ -109,7 +90,6 @@ def load():
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
-
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -154,11 +134,20 @@ if df is not None:
         u_df = df[df['ID_BUSCA'] == st.session_state.matricula_id]
         r_zero = u_df.iloc[0]
         n_col = [c for c in df.columns if 'NOME' in c][0]
-        st.markdown(f"**Olá, {str(r_zero.get(n_col)).split()[0]}!** 👋")
         
         c_mes = [c for c in u_df.columns if 'M' in c and 'S' in c][0]
-        m_sel = st.selectbox("Mês:", u_df[c_mes].unique())
+        m_sel = st.selectbox("Mês de Referência:", u_df[c_mes].unique())
         r = u_df[u_df[c_mes] == m_sel].iloc[0]
+
+        st.markdown(f"**Olá, {str(r_zero.get(n_col)).split()[0]}!** 👋")
+
+        # NOVO: RESUMO NO TOPO
+        st.markdown(f"""
+            <div class="summary-top">
+                <span class="summary-label">Saldo Estimado a Receber</span>
+                <span class="summary-value">{f_rs(r.get('TOT',0))}</span>
+            </div>
+        """, unsafe_allow_html=True)
 
         with st.container():
             st.markdown('<p class="card-title">🎯 Aderência</p>', unsafe_allow_html=True)
@@ -178,7 +167,8 @@ if df is not None:
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-highlight">{f_pc(r.get("S3",0))}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
 
-        st.markdown(f"""<div class="total-receber"><span class="total-label">Total a Receber</span><span class="total-value">{f_rs(r.get('TOT',0))}</span></div>""", unsafe_allow_html=True)
+        # MANTIDO: BANNER FINAL PARA FECHAMENTO
+        st.markdown(f"""<div class="total-receber"><span style="font-size:10px;text-transform:uppercase;opacity:0.8;">Fechamento Total</span><span class="total-value-final">{f_rs(r.get('TOT',0))}</span></div>""", unsafe_allow_html=True)
         
         obs = str(r.get('OBS_GERAIS','')).strip()
         if obs not in ['nan', '0', '', 'None']:
