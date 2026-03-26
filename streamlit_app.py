@@ -4,33 +4,34 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS Focado em Título em Linha Única e Mobile First
+# CSS Focado em Título Slim e Responsividade Total
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
     .stApp { background-color: #ffffff; font-family: 'Inter', sans-serif; }
 
-    /* Header Centralizado e Slim */
+    /* Header Centralizado e Ultra Slim */
     .header-container {
         display: flex; flex-direction: column; align-items: center;
-        text-align: center; padding: 0px 0 20px 0;
+        text-align: center; padding: 5px 10px 20px 10px;
     }
     
-    .logo-img { width: 60px; height: auto; margin-bottom: 8px; }
+    .logo-img { width: 55px; height: auto; margin-bottom: 8px; }
     
-    /* TÍTULO EM LINHA ÚNICA SEM ÍCONE */
+    /* TÍTULO EM LINHA ÚNICA - AJUSTADO PARA NÃO CORTAR */
     .main-title { 
         color: #1e293b; 
-        font-size: 18px; /* Reduzido para garantir linha única no mobile */
+        font-size: 16px; /* Tamanho reduzido para segurança máxima */
         font-weight: 800; 
         margin: 0; 
         text-transform: uppercase;
         white-space: nowrap; 
-        letter-spacing: 0.5px;
+        letter-spacing: 0.2px; /* Letras levemente mais próximas */
+        overflow: hidden;
     }
     
-    .sub-header { color: #64748b; font-size: 12px; margin-top: 4px; }
+    .sub-header { color: #64748b; font-size: 11px; margin-top: 2px; }
 
     /* Cards Brancos com Padding Ajustado */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
