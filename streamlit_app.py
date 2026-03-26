@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS COM PADRONIZAÇÃO DE BOTÕES E BLINDAGEM
+# CSS COM PADRONIZAÇÃO DE BOTÕES E BLINDAGEM ANTI-DARK MODE
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -43,25 +43,19 @@ st.markdown("""
         padding-left: 10px; margin-bottom: 10px; display: block;
     }
 
-    /* --- PADRONIZAÇÃO DOS BOTÕES (CONSULTAR = NOVA CONSULTA) --- */
-    /* Aplica-se ao st.button e ao st.form_submit_button */
-    .stButton>button, div[data-testid="stFormSubmitButton"]>button {
-        width: 100% !important;
-        border-radius: 8px !important;
-        font-size: 12px !important;
-        font-weight: 400 !important;
-        background-color: #f8fafc !important; /* Cinza bem clarinho */
-        color: #64748b !important; /* Texto grafite suave */
-        border: 1px solid #e2e8f0 !important; /* Borda sutil */
-        padding: 8px !important;
-        transition: all 0.2s ease;
+    /* Linhas de métricas detalhadas */
+    .metric-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 4px 0; border-bottom: 1px solid #f8fafc;
     }
+    .metric-label { color: #64748b !important; font-size: 11px; }
+    .metric-value { color: #1e293b !important; font-weight: 600; font-size: 12px; }
 
-    /* Efeito ao passar o mouse em ambos */
-    .stButton>button:hover, div[data-testid="stFormSubmitButton"]>button:hover {
-        border-color: #cbd5e1 !important;
-        background-color: #f1f5f9 !important;
-        color: #1e293b !important;
+    /* Botões Padronizados */
+    .stButton>button, div[data-testid="stFormSubmitButton"]>button {
+        width: 100% !important; border-radius: 8px !important; font-size: 12px !important;
+        background-color: #f8fafc !important; color: #64748b !important;
+        border: 1px solid #e2e8f0 !important; padding: 8px !important;
     }
 
     /* Banner Total */
@@ -111,7 +105,8 @@ def load():
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
             'META SELLOUT': 'S1', 'REAL SELLOUT': 'S2',
             'AING SELLOUT %': 'S3', 'PREMIAÇÃO SELLOUT': 'S4',
-            'TOTAL A RECEBER': 'TOT'
+            'TOTAL A RECEBER': 'TOT', 'PONTO EXTRA': 'P1',
+            'PONTO NATURAL': 'P2', 'RUPTURA': 'P3', 'MPDV': 'P4'
         }
         return df.rename(columns=m)
     except: return None
@@ -156,22 +151,30 @@ if df is not None:
         m_sel = st.selectbox("Mês:", u_df[c_mes].unique())
         r = u_df[u_df[c_mes] == m_sel].iloc[0]
 
-        # Containers de indicadores (Mantidos)
+        # 1. Container ADERÊNCIA
         with st.container():
             st.markdown('<p class="card-title">🎯 Aderência</p>', unsafe_allow_html=True)
-            st.write(f"Ating.: **{f_pc(r.get('A1',0))}**")
-            st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-value">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
 
+        # 2. Container LOJA DO CORAÇÃO (COM DETALHES)
         with st.container():
             st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
-            st.write(f"Medalha: **{r.get('L1','-')}**")
-            st.write(f"Prêmio: **{f_rs(r.get('L2',0))}**")
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-value">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ponto Extra / Nat.</span><span class="metric-value">{r.get("P1",0)} / {r.get("P2",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ruptura / MPDV</span><span class="metric-value">{r.get("P3",0)} / {r.get("P4",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Nota Final</span><span class="metric-value">{r.get("L0",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("L2",0))}</span></div>', unsafe_allow_html=True)
 
+        # 3. Container SELLOUT (COM DETALHES)
         with st.container():
             st.markdown('<p class="card-title">📈 Sellout</p>', unsafe_allow_html=True)
-            st.write(f"Ating.: **{f_pc(r.get('S3',0))}**")
-            st.write(f"Prêmio: **{f_rs(r.get('S4',0))}**")
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Meta</span><span class="metric-value">{f_nm(r.get("S1",0))}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Real</span><span class="metric-value">{f_nm(r.get("S2",0))}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ating. %</span><span class="metric-value">{f_pc(r.get("S3",0))}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
 
+        # TOTAL
         st.markdown(f"""
             <div class="total-receber">
                 <span style="font-size:10px; text-transform:uppercase; opacity:0.8;">Total a Receber</span>
@@ -179,8 +182,17 @@ if df is not None:
             </div>
         """, unsafe_allow_html=True)
         
+        # 4. OBSERVAÇÕES GERAIS (REATIVADO)
+        obs = str(r.get('OBS_GERAIS','')).strip()
+        if obs not in ['nan', '0', '', 'None']:
+            st.write("")
+            st.markdown(f"""
+                <div style="background:#f8fafc; padding:15px; border-radius:10px; border-left:4px solid #8B4513; color:#1e293b; font-size:12px;">
+                    <b style="color:#0f172a;">📝 Notas da Liderança:</b><br>{obs}
+                </div>
+            """, unsafe_allow_html=True)
+        
         st.write("")
-        # Este botão agora terá o mesmo estilo do botão de formulário acima
         if st.button("Nova Consulta"):
             st.session_state.consultado = False
             st.rerun()
