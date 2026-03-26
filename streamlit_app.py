@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS Focado em Mobile First e Título em Caixa Alta
+# CSS Focado em Título em Linha Única e Mobile First
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -16,18 +16,21 @@ st.markdown("""
         display: flex; flex-direction: column; align-items: center;
         text-align: center; padding: 0px 0 20px 0;
     }
-    .logo-img { width: 70px; height: auto; margin-bottom: 10px; }
     
-    /* NOVO TÍTULO ESTILIZADO */
+    .logo-img { width: 60px; height: auto; margin-bottom: 8px; }
+    
+    /* TÍTULO EM LINHA ÚNICA SEM ÍCONE */
     .main-title { 
         color: #1e293b; 
-        font-size: 22px; 
+        font-size: 18px; /* Reduzido para garantir linha única no mobile */
         font-weight: 800; 
         margin: 0; 
-        text-transform: uppercase; /* Força caixa alta no CSS também */
+        text-transform: uppercase;
+        white-space: nowrap; 
+        letter-spacing: 0.5px;
     }
     
-    .sub-header { color: #64748b; font-size: 13px; margin-top: 4px; }
+    .sub-header { color: #64748b; font-size: 12px; margin-top: 4px; }
 
     /* Cards Brancos com Padding Ajustado */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
@@ -37,18 +40,18 @@ st.markdown("""
     }
 
     .card-title {
-        color: #0f172a !important; font-size: 12px !important;
+        color: #0f172a !important; font-size: 11px !important;
         font-weight: 700 !important; text-transform: uppercase !important;
         letter-spacing: 0.5px !important; border-left: 3px solid #8B4513;
         padding-left: 10px; margin-bottom: 12px; display: block;
     }
 
-    /* Linhas de métricas inteligentes para Mobile */
+    /* Métricas Mobile */
     .metric-row {
         display: flex; justify-content: space-between; align-items: center;
         padding: 6px 0; border-bottom: 1px solid #f8fafc;
     }
-    .metric-label { color: #64748b; font-size: 12px; font-weight: 400; }
+    .metric-label { color: #64748b; font-size: 12px; }
     .metric-value { color: #1e293b; font-weight: 600; font-size: 13px; }
     .metric-highlight { color: #1e293b; font-weight: 800; font-size: 14px; }
 
@@ -58,17 +61,13 @@ st.markdown("""
         color: white; padding: 18px; border-radius: 12px;
         text-align: center; margin-top: 15px;
     }
-    .total-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-    .total-value { font-size: 26px; font-weight: 800; display: block; }
+    .total-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; }
+    .total-value { font-size: 24px; font-weight: 800; display: block; }
 
     /* Estilo do Botão */
     .stButton>button {
         width: 100%; border-radius: 8px; background-color: #f8fafc;
         color: #64748b; border: 1px solid #e2e8f0; font-size: 12px;
-    }
-
-    @media (max-width: 480px) {
-        .main-title { font-size: 19px; }
     }
     
     #MainMenu, footer, header {visibility: hidden;}
@@ -101,10 +100,8 @@ def load():
         
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
-        
         c_obs = [c for c in df.columns if 'OBSERV' in c]
         if c_obs: df = df.rename(columns={c_obs[0]: 'OBS_GERAIS'})
-
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
@@ -129,7 +126,7 @@ if 'matricula_id' not in st.session_state: st.session_state.matricula_id = ""
 st.markdown(f"""
     <div class="header-container">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Logo_grupo_3_cora%C3%A7%C3%B5es.png" class="logo-img">
-        <h1 class="main-title">🏆 PORTAL PREMIAÇÃO</h1>
+        <h1 class="main-title">PORTAL PREMIAÇÃO</h1>
         <p class="sub-header">Resultados e Indicadores</p>
     </div>
 """, unsafe_allow_html=True)
@@ -148,6 +145,7 @@ if df is not None:
                             st.session_state.matricula_id = acesso.strip()
                             st.rerun()
                         else: st.error("Não encontrado.")
+                    else: st.warning("Informe sua matrícula.")
     else:
         u_df = df[df['ID_BUSCA'] == st.session_state.matricula_id]
         r_zero = u_df.iloc[0]
@@ -158,7 +156,6 @@ if df is not None:
         m_sel = st.selectbox("Mês:", u_df[c_mes].unique())
         r = u_df[u_df[c_mes] == m_sel].iloc[0]
 
-        # Containers empilhados para melhor leitura no mobile
         with st.container():
             st.markdown('<p class="card-title">🎯 Aderência</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-highlight">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
