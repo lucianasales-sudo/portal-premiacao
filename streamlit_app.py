@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configuração de Estilo e Página
-st.set_page_config(page_title="PREMIAÇÃO", layout="wide", page_icon="☕")
+st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS focado em Mobile First e Alinhamento Assimétrico
+# CSS Focado em Mobile First e Título em Caixa Alta
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -17,7 +17,16 @@ st.markdown("""
         text-align: center; padding: 0px 0 20px 0;
     }
     .logo-img { width: 70px; height: auto; margin-bottom: 10px; }
-    .main-title { color: #1e293b; font-size: 22px; font-weight: 800; margin: 0; }
+    
+    /* NOVO TÍTULO ESTILIZADO */
+    .main-title { 
+        color: #1e293b; 
+        font-size: 22px; 
+        font-weight: 800; 
+        margin: 0; 
+        text-transform: uppercase; /* Força caixa alta no CSS também */
+    }
+    
     .sub-header { color: #64748b; font-size: 13px; margin-top: 4px; }
 
     /* Cards Brancos com Padding Ajustado */
@@ -43,7 +52,7 @@ st.markdown("""
     .metric-value { color: #1e293b; font-weight: 600; font-size: 13px; }
     .metric-highlight { color: #1e293b; font-weight: 800; font-size: 14px; }
 
-    /* Banner de Total mais "Slim" */
+    /* Banner de Total */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%);
         color: white; padding: 18px; border-radius: 12px;
@@ -58,9 +67,7 @@ st.markdown("""
         color: #64748b; border: 1px solid #e2e8f0; font-size: 12px;
     }
 
-    /* Media Query para forçar empilhamento se a tela for muito pequena */
     @media (max-width: 480px) {
-        .metric-row { flex-direction: row; } /* Mantém lado a lado, mas reduz fontes */
         .main-title { font-size: 19px; }
     }
     
@@ -68,7 +75,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Funções (Mantidas)
+# Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','R$ -']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -84,20 +91,24 @@ def f_pc(v):
         return f"{int(float(s))}%"
     except: return str(v)
 
-# 2. Carregamento
+# 2. Carregamento de Dados
 @st.cache_data
 def load():
     try:
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
         df.columns = [c.strip().upper() for c in df.columns]
+        
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
+        
         c_obs = [c for c in df.columns if 'OBSERV' in c]
         if c_obs: df = df.rename(columns={c_obs[0]: 'OBS_GERAIS'})
+
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
+
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -118,14 +129,14 @@ if 'matricula_id' not in st.session_state: st.session_state.matricula_id = ""
 st.markdown(f"""
     <div class="header-container">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Logo_grupo_3_cora%C3%A7%C3%B5es.png" class="logo-img">
-        <h1 class="main-title">🏆 Portal de Premiação</h1>
+        <h1 class="main-title">🏆 PORTAL PREMIAÇÃO</h1>
         <p class="sub-header">Resultados e Indicadores</p>
     </div>
 """, unsafe_allow_html=True)
 
 if df is not None:
     if not st.session_state.consultado:
-        _, col_login, _ = st.columns([0.1, 0.8, 0.1])
+        _, col_login, _ = st.columns([0.05, 0.9, 0.05])
         with col_login:
             with st.form("form_acesso"):
                 acesso = st.text_input("Matrícula:", placeholder="Digite aqui...")
@@ -147,7 +158,7 @@ if df is not None:
         m_sel = st.selectbox("Mês:", u_df[c_mes].unique())
         r = u_df[u_df[c_mes] == m_sel].iloc[0]
 
-        # Cards individuais em vez de colunas no Mobile
+        # Containers empilhados para melhor leitura no mobile
         with st.container():
             st.markdown('<p class="card-title">🎯 Aderência</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-highlight">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
