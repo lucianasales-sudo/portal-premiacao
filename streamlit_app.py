@@ -29,7 +29,7 @@ st.markdown("""
     .logo-img { width: 55px; height: auto; margin-bottom: 8px; }
     
     .main-title { 
-        color: #1e293b !important; /* Força o azul marinho quase preto */
+        color: #1e293b !important; 
         font-size: 15px; font-weight: 800; margin: 0; 
         text-transform: uppercase; white-space: nowrap; 
         width: 100vw; display: flex; justify-content: center;
@@ -37,7 +37,7 @@ st.markdown("""
     
     .sub-header { color: #64748b !important; font-size: 11px; margin-top: 2px; }
 
-    /* Estilização dos Cards - Forçando Fundo Branco */
+    /* Estilização dos Cards */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
         background-color: #ffffff !important; 
         border: 1px solid #f1f5f9 !important;
@@ -59,7 +59,7 @@ st.markdown("""
     .metric-value { color: #1e293b !important; font-weight: 600; font-size: 12px; }
     .metric-highlight { color: #1e293b !important; font-weight: 800; font-size: 13px; }
 
-    /* Banner de Total - Fundo Escuro com Letras Brancas */
+    /* Banner de Total */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%) !important;
         color: #ffffff !important; padding: 18px; border-radius: 12px;
@@ -68,10 +68,19 @@ st.markdown("""
     .total-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; color: #ffffff !important; }
     .total-value { font-size: 24px; font-weight: 800; display: block; color: #ffffff !important; }
 
-    /* Botão de Nova Consulta */
+    /* --- AJUSTE DO BOTÃO: FUNDO MARROM E TEXTO BRANCO --- */
     .stButton>button { 
-        width: 100%; border-radius: 8px; font-size: 12px; 
-        background-color: #f8fafc !important; color: #64748b !important;
+        width: 100%; border-radius: 8px; font-size: 14px; font-weight: 700 !important;
+        background-color: #8B4513 !important; /* Marrom 3 Corações */
+        color: #ffffff !important; /* TEXTO BRANCO */
+        border: none !important;
+        padding: 10px !important;
+    }
+    
+    /* Cor do botão ao passar o mouse ou clicar */
+    .stButton>button:hover, .stButton>button:active, .stButton>button:focus {
+        background-color: #5D2E0A !important;
+        color: #ffffff !important;
     }
     
     #MainMenu, footer, header {visibility: hidden;}
@@ -82,7 +91,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Funções de Formatação
+# Funções de Formatação (Mantidas)
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','R$ -']: return "R$ 0,00"
     l = str(v).replace('R','').replace('$','').replace('S','').strip()
@@ -105,7 +114,6 @@ def load():
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
         df.columns = [c.strip().upper() for c in df.columns]
-        
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
         c_obs = [c for c in df.columns if 'OBSERV' in c]
@@ -113,7 +121,6 @@ def load():
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
-
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -144,8 +151,8 @@ if df is not None:
         _, col_login, _ = st.columns([0.05, 0.9, 0.05])
         with col_login:
             with st.form("form_acesso"):
-                # Forçamos a cor preta aqui para garantir visibilidade no input
                 acesso = st.text_input("Matrícula:", placeholder="Digite aqui...")
+                # Botão Consultar agora sairá Marrom com texto Branco
                 if st.form_submit_button("Consultar"):
                     if acesso:
                         u_id = acesso.strip()
