@@ -4,98 +4,75 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS COM BLINDAGEM TOTAL E BOTÃO PREMIUM ALTO CONTRASTE
+# CSS COM PADRONIZAÇÃO DE BOTÕES E BLINDAGEM
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
-    /* FORÇAR FUNDO BRANCO E LETRAS ESCURAS EM TODO O APP (Blindagem Samsung/Dark Mode) */
+    /* FUNDO E TEXTO GLOBAL */
     .stApp, div[data-testid="stAppViewContainer"], .main {
         background-color: #ffffff !important;
         color: #1e293b !important;
     }
 
-    /* FORÇAR COR DAS FONTES EM INPUTS E SELECTBOX */
-    input, div[data-baseweb="select"] > div, li {
-        color: #1e293b !important;
-        background-color: #ffffff !important;
-    }
+    /* INPUTS E PLACEHOLDER */
+    input { color: #1e293b !important; background-color: #ffffff !important; }
+    input::placeholder { color: #94a3b8 !important; opacity: 1; }
 
-    /* FIX: FORÇAR COR DO TEXTO DE EXEMPLO (PLACEHOLDER) */
-    input::placeholder {
-        color: #94a3b8 !important;
-        opacity: 1;
-    }
-
-    /* Header Centralizado e Slim */
+    /* Header */
     .header-container {
         display: flex; flex-direction: column; align-items: center;
-        text-align: center; padding: 5px 0px 15px 0px; width: 100%; margin: 0 auto;
+        text-align: center; padding: 5px 0px 15px 0px; width: 100%;
     }
     .logo-img { width: 55px; height: auto; margin-bottom: 8px; }
-    
-    /* TÍTULO EM LINHA ÚNICA - 15px */
     .main-title { 
-        color: #1e293b !important; 
-        font-size: 15px; font-weight: 800; margin: 0; 
-        text-transform: uppercase; white-space: nowrap; 
-        width: 100vw; display: flex; justify-content: center;
-        letter-spacing: 0.2px;
+        color: #1e293b !important; font-size: 15px; font-weight: 800; 
+        text-transform: uppercase; white-space: nowrap; width: 100vw; 
+        display: flex; justify-content: center; letter-spacing: 0.2px;
     }
-    
     .sub-header { color: #64748b !important; font-size: 11px; margin-top: 2px; }
 
-    /* Estilização dos Cards */
+    /* Cards */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
-        background-color: #ffffff !important; 
-        border: 1px solid #f1f5f9 !important;
-        border-radius: 12px; padding: 14px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 8px;
+        background-color: #ffffff !important; border: 1px solid #f1f5f9 !important;
+        border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 8px;
     }
-
     .card-title {
-        color: #0f172a !important; font-size: 11px !important;
-        font-weight: 700 !important; text-transform: uppercase !important;
-        border-left: 3px solid #8B4513 !important; padding-left: 10px; margin-bottom: 10px; display: block;
+        color: #0f172a !important; font-size: 11px !important; font-weight: 700 !important;
+        text-transform: uppercase !important; border-left: 3px solid #8B4513 !important;
+        padding-left: 10px; margin-bottom: 10px; display: block;
     }
 
-    .metric-row {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 6px 0; border-bottom: 1px solid #f8fafc;
+    /* --- PADRONIZAÇÃO DOS BOTÕES (CONSULTAR = NOVA CONSULTA) --- */
+    /* Aplica-se ao st.button e ao st.form_submit_button */
+    .stButton>button, div[data-testid="stFormSubmitButton"]>button {
+        width: 100% !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        font-weight: 400 !important;
+        background-color: #f8fafc !important; /* Cinza bem clarinho */
+        color: #64748b !important; /* Texto grafite suave */
+        border: 1px solid #e2e8f0 !important; /* Borda sutil */
+        padding: 8px !important;
+        transition: all 0.2s ease;
     }
-    .metric-label { color: #64748b !important; font-size: 12px; }
-    .metric-value { color: #1e293b !important; font-weight: 600; font-size: 13px; }
-    .metric-highlight { color: #1e293b !important; font-weight: 800; font-size: 14px; }
 
-    /* Banner de Total Final */
+    /* Efeito ao passar o mouse em ambos */
+    .stButton>button:hover, div[data-testid="stFormSubmitButton"]>button:hover {
+        border-color: #cbd5e1 !important;
+        background-color: #f1f5f9 !important;
+        color: #1e293b !important;
+    }
+
+    /* Banner Total */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%) !important;
-        color: #ffffff !important; padding: 18px; border-radius: 12px;
-        text-align: center; margin-top: 15px;
+        color: #ffffff !important; padding: 18px; border-radius: 12px; text-align: center; margin-top: 15px;
     }
-    .total-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; color: #ffffff !important; }
     .total-value { font-size: 24px; font-weight: 800; display: block; color: #ffffff !important; }
-
-    /* BOTÃO MARROM COM TEXTO BRANCO (ALTO CONTRASTE) */
-    .stButton>button { 
-        width: 100%; border-radius: 8px; font-size: 14px; font-weight: 700 !important;
-        background-color: #8B4513 !important; 
-        color: #ffffff !important; 
-        border: none !important;
-        padding: 10px !important;
-        box-shadow: 0 4px 6px rgba(139, 69, 19, 0.2) !important;
-    }
-    
-    .stButton>button:hover {
-        background-color: #5D2E0A !important;
-        color: #ffffff !important;
-    }
     
     #MainMenu, footer, header {visibility: hidden;}
-    
-    @media (max-width: 640px) {
-        .block-container { padding-left: 1rem !important; padding-right: 1rem !important; }
-    }
+    @media (max-width: 640px) { .block-container { padding: 1rem !important; } }
     </style>
     """, unsafe_allow_html=True)
 
@@ -122,7 +99,6 @@ def load():
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
         df.columns = [c.strip().upper() for c in df.columns]
-        
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
         c_obs = [c for c in df.columns if 'OBSERV' in c]
@@ -130,14 +106,12 @@ def load():
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
-
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
             'META SELLOUT': 'S1', 'REAL SELLOUT': 'S2',
             'AING SELLOUT %': 'S3', 'PREMIAÇÃO SELLOUT': 'S4',
-            'TOTAL A RECEBER': 'TOT', 'PONTO EXTRA': 'P1',
-            'PONTO NATURAL': 'P2', 'RUPTURA': 'P3', 'MPDV': 'P4'
+            'TOTAL A RECEBER': 'TOT'
         }
         return df.rename(columns=m)
     except: return None
@@ -182,40 +156,31 @@ if df is not None:
         m_sel = st.selectbox("Mês:", u_df[c_mes].unique())
         r = u_df[u_df[c_mes] == m_sel].iloc[0]
 
-        # Container Aderência
+        # Containers de indicadores (Mantidos)
         with st.container():
             st.markdown('<p class="card-title">🎯 Aderência</p>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-highlight">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
+            st.write(f"Ating.: **{f_pc(r.get('A1',0))}**")
+            st.write(f"Prêmio: **{f_rs(r.get('A2',0))}**")
 
-        # Container Loja do Coração
         with st.container():
             st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-highlight">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Extra/Nat.</span><span class="metric-value">{r.get("P1",0)}/{r.get("P2",0)}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Nota</span><span class="metric-value">{r.get("L0",0)}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("L2",0))}</span></div>', unsafe_allow_html=True)
+            st.write(f"Medalha: **{r.get('L1','-')}**")
+            st.write(f"Prêmio: **{f_rs(r.get('L2',0))}**")
 
-        # Container Sellout
         with st.container():
             st.markdown('<p class="card-title">📈 Sellout</p>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Meta/Real</span><span class="metric-value">{f_nm(r.get("S1",0))}/{f_nm(r.get("S2",0))}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-highlight">{f_pc(r.get("S3",0))}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("S4",0))}</span></div>', unsafe_allow_html=True)
+            st.write(f"Ating.: **{f_pc(r.get('S3',0))}**")
+            st.write(f"Prêmio: **{f_rs(r.get('S4',0))}**")
 
-        # BANNER FINAL DE TOTAL
         st.markdown(f"""
             <div class="total-receber">
-                <span class="total-label">Total a Receber</span>
+                <span style="font-size:10px; text-transform:uppercase; opacity:0.8;">Total a Receber</span>
                 <span class="total-value">{f_rs(r.get('TOT',0))}</span>
             </div>
         """, unsafe_allow_html=True)
         
-        obs = str(r.get('OBS_GERAIS','')).strip()
-        if obs not in ['nan', '0', '', 'None']:
-            st.markdown(f'<div style="background:#f8fafc; padding:15px; border-radius:10px; margin-top:15px; font-size:12px; border-left:4px solid #8B4513; color:#1e293b;"><b>Nota:</b> {obs}</div>', unsafe_allow_html=True)
-        
         st.write("")
+        # Este botão agora terá o mesmo estilo do botão de formulário acima
         if st.button("Nova Consulta"):
             st.session_state.consultado = False
             st.rerun()
