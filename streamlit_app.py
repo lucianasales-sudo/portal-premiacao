@@ -4,74 +4,77 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS Focado em Título Slim e Responsividade Total
+# CSS com Blindagem contra cortes laterais
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
     .stApp { background-color: #ffffff; font-family: 'Inter', sans-serif; }
 
-    /* Header Centralizado e Ultra Slim */
+    /* Header com largura total e sem cortes */
     .header-container {
         display: flex; flex-direction: column; align-items: center;
-        text-align: center; padding: 5px 10px 20px 10px;
+        text-align: center; 
+        padding: 5px 0px 20px 0px;
+        width: 100%;
+        margin: 0 auto;
     }
     
-    .logo-img { width: 55px; height: auto; margin-bottom: 8px; }
+    .logo-img { width: 50px; height: auto; margin-bottom: 8px; }
     
-    /* TÍTULO EM LINHA ÚNICA - AJUSTADO PARA NÃO CORTAR */
+    /* TÍTULO SLIM - 15px e largura forçada */
     .main-title { 
         color: #1e293b; 
-        font-size: 16px; /* Tamanho reduzido para segurança máxima */
+        font-size: 15px; 
         font-weight: 800; 
         margin: 0; 
         text-transform: uppercase;
         white-space: nowrap; 
-        letter-spacing: 0.2px; /* Letras levemente mais próximas */
-        overflow: hidden;
+        letter-spacing: 0px;
+        width: 100vw; /* Ocupa a largura da janela */
+        display: flex;
+        justify-content: center;
     }
     
     .sub-header { color: #64748b; font-size: 11px; margin-top: 2px; }
 
-    /* Cards Brancos com Padding Ajustado */
+    /* Estilização dos Blocos (Cards) */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
         background-color: #ffffff; border: 1px solid #f1f5f9;
-        border-radius: 12px; padding: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 10px;
+        border-radius: 12px; padding: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 8px;
     }
 
     .card-title {
         color: #0f172a !important; font-size: 11px !important;
         font-weight: 700 !important; text-transform: uppercase !important;
-        letter-spacing: 0.5px !important; border-left: 3px solid #8B4513;
-        padding-left: 10px; margin-bottom: 12px; display: block;
+        border-left: 3px solid #8B4513; padding-left: 10px; margin-bottom: 10px; display: block;
     }
 
-    /* Métricas Mobile */
     .metric-row {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 6px 0; border-bottom: 1px solid #f8fafc;
+        padding: 5px 0; border-bottom: 1px solid #f8fafc;
     }
-    .metric-label { color: #64748b; font-size: 12px; }
-    .metric-value { color: #1e293b; font-weight: 600; font-size: 13px; }
-    .metric-highlight { color: #1e293b; font-weight: 800; font-size: 14px; }
+    .metric-label { color: #64748b; font-size: 11px; }
+    .metric-value { color: #1e293b; font-weight: 600; font-size: 12px; }
+    .metric-highlight { color: #1e293b; font-weight: 800; font-size: 13px; }
 
-    /* Banner de Total */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%);
-        color: white; padding: 18px; border-radius: 12px;
-        text-align: center; margin-top: 15px;
+        color: white; padding: 15px; border-radius: 12px;
+        text-align: center; margin-top: 10px;
     }
-    .total-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; }
-    .total-value { font-size: 24px; font-weight: 800; display: block; }
+    .total-label { font-size: 9px; opacity: 0.8; text-transform: uppercase; }
+    .total-value { font-size: 22px; font-weight: 800; display: block; }
 
-    /* Estilo do Botão */
-    .stButton>button {
-        width: 100%; border-radius: 8px; background-color: #f8fafc;
-        color: #64748b; border: 1px solid #e2e8f0; font-size: 12px;
-    }
+    .stButton>button { width: 100%; border-radius: 8px; font-size: 12px; }
     
     #MainMenu, footer, header {visibility: hidden;}
+    
+    /* Remove padding lateral padrão do Streamlit no mobile */
+    @media (max-width: 640px) {
+        .block-container { padding-left: 1rem !important; padding-right: 1rem !important; }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -127,7 +130,7 @@ if 'matricula_id' not in st.session_state: st.session_state.matricula_id = ""
 st.markdown(f"""
     <div class="header-container">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Logo_grupo_3_cora%C3%A7%C3%B5es.png" class="logo-img">
-        <h1 class="main-title">PORTAL PREMIAÇÃO</h1>
+        <div class="main-title">PORTAL PREMIAÇÃO</div>
         <p class="sub-header">Resultados e Indicadores</p>
     </div>
 """, unsafe_allow_html=True)
