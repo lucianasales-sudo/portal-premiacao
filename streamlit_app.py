@@ -4,24 +4,28 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS COM BLINDAGEM TOTAL DE CORES
+# CSS COM BLINDAGEM E AJUSTE DE PLACEHOLDER
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
-    /* FORÇAR FUNDO BRANCO E LETRAS ESCURAS EM TODO O APP */
     .stApp, div[data-testid="stAppViewContainer"], .main {
         background-color: #ffffff !important;
         color: #1e293b !important;
     }
 
-    /* FORÇAR COR DAS FONTES EM INPUTS E SELECTBOX */
-    input, div[data-baseweb="select"] > div, li {
+    /* FORÇAR COR DO TEXTO DIGITADO */
+    input {
         color: #1e293b !important;
         background-color: #ffffff !important;
     }
 
-    /* Header Centralizado */
+    /* --- FIX: FORÇAR COR DO TEXTO DE EXEMPLO (PLACEHOLDER) --- */
+    input::placeholder {
+        color: #94a3b8 !important; /* Cinza legível */
+        opacity: 1;
+    }
+
     .header-container {
         display: flex; flex-direction: column; align-items: center;
         text-align: center; padding: 5px 0px 20px 0px; width: 100%; margin: 0 auto;
@@ -37,7 +41,6 @@ st.markdown("""
     
     .sub-header { color: #64748b !important; font-size: 11px; margin-top: 2px; }
 
-    /* Estilização dos Cards */
     div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown) {
         background-color: #ffffff !important; 
         border: 1px solid #f1f5f9 !important;
@@ -59,7 +62,6 @@ st.markdown("""
     .metric-value { color: #1e293b !important; font-weight: 600; font-size: 12px; }
     .metric-highlight { color: #1e293b !important; font-weight: 800; font-size: 13px; }
 
-    /* Banner de Total */
     .total-receber {
         background: linear-gradient(135deg, #8B4513 0%, #5D2E0A 100%) !important;
         color: #ffffff !important; padding: 18px; border-radius: 12px;
@@ -68,19 +70,13 @@ st.markdown("""
     .total-label { font-size: 10px; opacity: 0.8; text-transform: uppercase; color: #ffffff !important; }
     .total-value { font-size: 24px; font-weight: 800; display: block; color: #ffffff !important; }
 
-    /* --- AJUSTE DO BOTÃO: FUNDO MARROM E TEXTO BRANCO --- */
+    /* Estilo do Botão Marrom com Texto Branco */
     .stButton>button { 
         width: 100%; border-radius: 8px; font-size: 14px; font-weight: 700 !important;
-        background-color: #8B4513 !important; /* Marrom 3 Corações */
-        color: #ffffff !important; /* TEXTO BRANCO */
+        background-color: #8B4513 !important;
+        color: #ffffff !important;
         border: none !important;
         padding: 10px !important;
-    }
-    
-    /* Cor do botão ao passar o mouse ou clicar */
-    .stButton>button:hover, .stButton>button:active, .stButton>button:focus {
-        background-color: #5D2E0A !important;
-        color: #ffffff !important;
     }
     
     #MainMenu, footer, header {visibility: hidden;}
@@ -151,8 +147,8 @@ if df is not None:
         _, col_login, _ = st.columns([0.05, 0.9, 0.05])
         with col_login:
             with st.form("form_acesso"):
-                acesso = st.text_input("Matrícula:", placeholder="Digite aqui...")
-                # Botão Consultar agora sairá Marrom com texto Branco
+                # REINSERIDO O PLACEHOLDER AQUI
+                acesso = st.text_input("Matrícula:", placeholder="Ex: 1-83362")
                 if st.form_submit_button("Consultar"):
                     if acesso:
                         u_id = acesso.strip()
@@ -164,6 +160,7 @@ if df is not None:
                         else: st.error("Não encontrado.")
                     else: st.warning("Informe sua matrícula.")
     else:
+        # (O restante do seu código de visualização continua igual)
         u_df = df[df['ID_BUSCA'] == st.session_state.matricula_id]
         r_zero = u_df.iloc[0]
         n_col = [c for c in df.columns if 'NOME' in c][0]
