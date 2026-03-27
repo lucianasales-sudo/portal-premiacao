@@ -4,7 +4,7 @@ import pandas as pd
 # 1. Configuração de Estilo e Página
 st.set_page_config(page_title="Portal de Premiação", layout="wide", page_icon="☕")
 
-# CSS COM FONTES AMPLIADAS PARA MOBILE
+# CSS COM FONTES AMPLIADAS E BLINDAGEM DE COR
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -38,14 +38,12 @@ st.markdown("""
         border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); margin-bottom: 10px;
     }
 
-    /* TÍTULOS DOS BLOCOS MAIORES */
     .card-title {
         color: #0f172a !important; font-size: 13px !important; font-weight: 700 !important;
         text-transform: uppercase !important; border-left: 4px solid #8B4513 !important;
         padding-left: 12px; margin-bottom: 12px; display: block;
     }
 
-    /* LINHAS DE MÉTRICAS COM FONTES AUMENTADAS */
     .metric-row {
         display: flex; justify-content: space-between; align-items: center;
         padding: 8px 0; border-bottom: 1px solid #f8fafc;
@@ -95,13 +93,17 @@ def load():
         try: df = pd.read_csv("dados.csv", sep=';', encoding='latin-1')
         except: df = pd.read_csv("dados.csv", sep=',', encoding='utf-8')
         df.columns = [c.strip().upper() for c in df.columns]
+        
         col_obs = [c for c in df.columns if 'OBS' in c]
         if col_obs: df = df.rename(columns={col_obs[0]: 'OBS_GERAIS'})
+        
         c_nota = [c for c in df.columns if 'NOTA' in c and 'CORA' in c]
         if c_nota: df = df.rename(columns={c_nota[0]: 'L0'})
+        
         c_mat = [c for c in df.columns if 'MATRIC' in c]
         k_mat = c_mat[0] if c_mat else df.columns[0]
         df['ID_BUSCA'] = df[k_mat].astype(str).str.strip()
+        
         m = {
             'PRODUTIVIDADE ADERENCIA ROTEIRO': 'A1', 'PREMIAÇÃO ADERENCIA ROTEIRO': 'A2',
             'MEDALHA LOJA DO CORAÇÃO': 'L1', 'PREMIAÇÃO MEDALHA LC': 'L2',
@@ -159,12 +161,14 @@ if df is not None:
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-value">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
 
-        # 2. Container LOJA DO CORAÇÃO
+        # 2. Container LOJA DO CORAÇÃO (LINHAS SEPARADAS)
         with st.container():
             st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-value">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Ponto Extra/Ponto Nat.</span><span class="metric-value">{r.get("P1",0)} / {r.get("P2",0)}</span></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Ruptura/MPDV</span><span class="metric-value">{r.get("P3",0)} / {r.get("P4",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ponto Extra</span><span class="metric-value">{r.get("P1",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ponto Nat.</span><span class="metric-value">{r.get("P2",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Ruptura</span><span class="metric-value">{r.get("P3",0)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-row"><span class="metric-label">MPDV</span><span class="metric-value">{r.get("P4",0)}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Nota Final</span><span class="metric-value">{r.get("L0",0)}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("L2",0))}</span></div>', unsafe_allow_html=True)
 
