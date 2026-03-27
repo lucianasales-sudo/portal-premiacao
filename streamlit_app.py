@@ -70,6 +70,14 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- FUNÇÃO PARA ADICIONAR ÍCONE DE MEDALHA ---
+def get_medal_icon(medal_text):
+    m = str(medal_text).upper()
+    if "OURO" in m: return f"{medal_text} 🥇"
+    elif "PRATA" in m: return f"{medal_text} 🥈"
+    elif "BRONZE" in m: return f"{medal_text} 🥉"
+    return medal_text
+
 # Funções de Formatação
 def f_rs(v):
     if pd.isna(v) or str(v).strip() in ['0','0,00','-','R$ -']: return "R$ 0,00"
@@ -161,10 +169,13 @@ if df is not None:
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ating.</span><span class="metric-value">{f_pc(r.get("A1",0))}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Prêmio</span><span class="metric-value">{f_rs(r.get("A2",0))}</span></div>', unsafe_allow_html=True)
 
-        # 2. Container LOJA DO CORAÇÃO (LINHAS SEPARADAS)
+        # 2. Container LOJA DO CORAÇÃO
         with st.container():
             st.markdown('<p class="card-title">🏪 Loja do Coração</p>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-value">{r.get("L1","-")}</span></div>', unsafe_allow_html=True)
+            # AQUI ESTÁ A MUDANÇA: USANDO A FUNÇÃO GET_MEDAL_ICON
+            medalha_com_icone = get_medal_icon(r.get("L1","-"))
+            st.markdown(f'<div class="metric-row"><span class="metric-label">Medalha</span><span class="metric-value">{medalha_com_icone}</span></div>', unsafe_allow_html=True)
+            
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ponto Extra</span><span class="metric-value">{r.get("P1",0)}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ponto Nat.</span><span class="metric-value">{r.get("P2",0)}</span></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="metric-row"><span class="metric-label">Ruptura</span><span class="metric-value">{r.get("P3",0)}</span></div>', unsafe_allow_html=True)
